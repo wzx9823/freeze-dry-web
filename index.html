@@ -39,7 +39,7 @@
       return;
     }
   } catch(e) {}
-  var CACHE_STAMP = '20260831-398';
+  var CACHE_STAMP = '20260831-399';
   var need = false;
   var href = window.location.href;
   if (href.indexOf(CACHE_STAMP) === -1) {
@@ -1742,7 +1742,7 @@ body.dark ::selection{ background:rgba(34,211,238,.32); color:#e2e8f0; }
 <div class="card"><div class="card-title"><span>📊</span>数据统计</div><div class="stats-grid" id="statsGrid"></div><div id="ratioArea" style="display:none"><div style="font-size:13px;margin-bottom:4px">周期分布</div><div class="ratio-bar" id="ratioBar"></div><div style="display:flex;justify-content:space-between;font-size:12px;color:var(--c-text-light)"><span>标准 <span id="rPass">0</span></span><span>较长 <span id="rWarn">0</span></span><span>长周期 <span id="rFail">0</span></span></div><div style="font-size:11px;color:var(--c-text-light);margin-top:4px">注：热敏性高的活性物（生长因子/酶类/视黄醇）常需 30h+ 长周期工艺，>32h 不等于异常。</div></div></div>
 <div class="card"><div class="card-title"><span>📜</span>历史批次记录</div><div id="historyList"><div style="text-align:center;color:var(--c-text-light);padding:20px">暂无历史记录，生成曲线后点击"存入历史"</div></div></div>
 <div class="card"><div class="card-title"><span>📤</span>数据上传</div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-s btn-sm" onclick="document.getElementById('curveUpload').click()">📈 上传冻干曲线(JSON)</button><input type="file" id="curveUpload" accept=".json,.csv" style="display:none" onchange="handleCurveUpload(event)"><button class="btn btn-s btn-sm" onclick="document.getElementById('historyUpload').click()">📋 上传历史记录</button><input type="file" id="historyUpload" accept=".json,.csv" style="display:none" onchange="handleHistoryUpload(event)"><button class="btn btn-s btn-sm" onclick="document.getElementById('recipeUpload').click()">🧪 上传配方</button><input type="file" id="recipeUpload" accept=".json,.csv" style="display:none" onchange="handleRecipeUpload(event)"></div><div id="uploadPreview" style="margin-top:12px"></div></div>
-<div class="card"><div class="card-title"><span>☁️</span>云同步（手机/电脑互通）</div><div id="syncStatus" style="font-size:13px;margin-bottom:10px;color:var(--c-text-light)">未启用</div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-p btn-sm" onclick="doCreateSync()">➕ 创建同步码</button><button class="btn btn-s btn-sm" onclick="doConnectSync()">🔗 连接同步码</button><button class="btn btn-s btn-sm" onclick="doManualPush()">⬆️ 上传</button><button class="btn btn-s btn-sm" onclick="doManualPull()">⬇️ 拉取</button><button class="btn btn-s btn-sm" onclick="doDisconnectSync()">⛔ 断开</button><button class="btn btn-s btn-sm" onclick="fixCache()">🧹 修复打不开</button></div><div style="font-size:12px;color:var(--c-text-light);margin-top:8px;line-height:1.6">手机和电脑打开同一网址，一端「创建同步码」、另一端「连接同步码」输入同一串，数据自动双向互通。云端仅存加密密文，同步码只存本机、不上传。</div></div>
+<div class="card"><div class="card-title"><span>☁️</span>云同步（手机/电脑互通）</div><div id="syncStatus" style="font-size:13px;margin-bottom:10px;color:var(--c-text-light)">未启用</div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-p btn-sm" onclick="doCreateSync()">➕ 创建同步码</button><button class="btn btn-s btn-sm" onclick="doConnectSync()">🔗 连接同步码</button><button class="btn btn-s btn-sm" onclick="doManualPush()">⬆️ 上传</button><button class="btn btn-s btn-sm" onclick="doManualPull()">⬇️ 拉取</button><button class="btn btn-s btn-sm" onclick="doDisconnectSync()">⛔ 断开</button><button class="btn btn-s btn-sm" onclick="fixCache()">🧹 修复打不开</button></div><div id="snapshotStatus" style="font-size:12px;margin:8px 0 4px;color:var(--c-text-light)">尚未备份/恢复过</div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px"><button class="btn btn-p btn-sm" onclick="openSnapshotModal()">📦 备份/恢复（免网络）</button></div><div style="font-size:12px;color:var(--c-text-light);margin-top:4px;line-height:1.6"><b>📦 免网络互通（推荐）</b>：点「备份/恢复」导出备份文件，发给手机或电脑，另一端「恢复」即数据互通，<b>全程离线、无需服务器</b>。上方「同步码」方式需两端都能访问同一网址（netlify 被墙时请用下方离线方式）。</div></div>
 <div class="card"><div class="card-title"><span>📥</span>数据导出</div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-p btn-sm" onclick="exportData('json')">📥 导出全部(JSON)</button><button class="btn btn-s btn-sm" onclick="exportData('csv')">📋 导出历史(CSV)</button><button class="btn btn-s btn-sm" onclick="clearAllData()">🗑️ 清空数据</button></div></div>
 <div class="card"><div class="card-title"><span>🧮</span>冻干工艺计算器 <span style="margin-left:auto;font-size:12px;color:var(--c-text-light);font-weight:400">物理量估算 · 供设备选型与工艺验证参考</span></div><div style="margin-bottom:10px"><button class="btn btn-p btn-sm" onclick="loadCalcFromCurve()">📥 从曲线页载入参数</button></div><div class="calc-grid"><div><div class="ui-group"><div class="ui-group-title">① 物料与容器</div><div class="fg"><label>装液量(mL)</label><input type="number" id="calcVolume" value="2" step="0.5" oninput="doCalc()"></div><div class="fg"><label>固含量(%)</label><input type="number" id="calcSolid" value="8" step="0.5" oninput="doCalc()"></div><div class="fg"><label>瓶径(mm)</label><input type="number" id="calcVialDia" value="22" step="1" oninput="doCalc()"></div><div class="fg"><label>批量(瓶)</label><input type="number" id="calcBatchSize" value="100" step="10" min="1" oninput="doCalc()"></div></div><div class="ui-group"><div class="ui-group-title">② 工艺参数</div><div class="fg"><label>预冻终温(°C)</label><input type="number" id="calcPreTemp" value="-45" step="1" oninput="doCalc()"></div><div class="fg"><label>一干搁板温度(°C)</label><input type="number" id="calcPriTemp" value="-30" step="1" oninput="doCalc()"></div><div class="fg"><label>一干时间(h)</label><input type="number" id="calcPriTime" value="15" step="0.5" oninput="doCalc()"></div><div class="fg"><label>产品 Tc(°C)</label><input type="number" id="calcTc" value="-35" step="1" oninput="doCalc()"></div></div></div><div class="calc-result" id="calcResult"></div><div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-s btn-sm" onclick="copyCalc()">📋 复制结果</button><button class="btn btn-s btn-sm" onclick="resetCalc()">↺ 重置</button></div></div></div></div>
 
@@ -2242,7 +2242,7 @@ body.dark ::selection{ background:rgba(34,211,238,.32); color:#e2e8f0; }
 <script>
 
 // ===== 智能驱动更新：应用自更新 / 版本检查 (v3.48) =====
-const APP_VERSION = '3.98';
+const APP_VERSION = '3.99';
 const APP_BUILD_ID = '20260820-v366-perm-' + (new Date().toISOString().slice(0,10));
 const APP_UPDATE_MANIFEST = './version.json'; // 可改为托管地址（需 CORS 允许跨域读取）
 function verNum(v){ var n = String(v||'').replace(/[^0-9.]/g,'').split('.'); return (parseInt(n[0]||0,10)*100 + parseInt(n[1]||0,10)); }
@@ -10693,6 +10693,53 @@ function buildBestCard(best, title, showWhy, whyHtml, riskHtml) {
 }
 
 // 优化结果富渲染：最优卡 + 评分条 + 物理依据 + 风险 + 次优并排 + 候选对比表
+// ===== v3.99 优化结果增强：压缩 vs 基准 + 守卫清单 =====
+function optBaselineCurve(input) {
+  if (!input || typeof generateCurve !== 'function') return null;
+  try {
+    // 基线=「标准安全手工配方」：海藻糖(默认保护剂)+保守模式+关退火，代表未优化时的典型周期，用于量化压缩幅度
+    var b = {
+      activeType: input.activeType,
+      activeConc: input.activeConc || 1,
+      protectantType: 'trehalose',
+      protectantConc: 5,
+      solidContent: input.solidContent || 8,
+      fillVolume: input.fillVolume || 2,
+      containerType: input.containerType || 'vial_5ml',
+      coolingMode: input.coolingMode || 'normal',
+      mode: 'conservative',
+      annealing: false
+    };
+    return generateCurve(b, null, null);
+  } catch (e) { return null; }
+}
+function optGuardListHtml(best) {
+  var ph = best.curve.physics || {};
+  var th = (typeof activeIngredients !== 'undefined' && best.input && activeIngredients[best.input.activeType]) ? activeIngredients[best.input.activeType] : null;
+  var tc = th ? th.tc : null;
+  var items = [];
+  if (ph.tpMax != null && tc != null) {
+    var m = Math.round((tc - ph.tpMax) * 10) / 10;
+    var st = (ph.tpMax <= tc - 5) ? 'good' : (ph.tpMax <= tc - 2) ? 'mid' : 'low';
+    var ic = st === 'good' ? '✅' : st === 'mid' ? '⚠️' : '❌';
+    items.push('<span class="sc ' + st + '">' + ic + ' 不触塌陷：产品峰值 ' + ph.tpMax + '°C / Tc ' + tc + '°C（裕度 ' + m + '°C）</span>');
+  }
+  if (ph.residualMoisture != null) {
+    var spec = ph.moistureSpec != null ? ph.moistureSpec : 2;
+    var ok = ph.residualMoisture <= spec;
+    items.push('<span class="sc ' + (ok ? 'good' : 'low') + '">' + (ok ? '✅' : '❌') + ' 残水达标：' + ph.residualMoisture + '% / ≤' + spec + '%</span>');
+  }
+  if (ph.equipMargin != null) {
+    var eok = !ph.equipLimited && ph.equipMargin >= 0;
+    items.push('<span class="sc ' + (eok ? 'good' : 'low') + '">' + (eok ? '✅' : '❌') + ' 设备能力内：升华裕度' + (ph.equipLimited ? '超限' : ph.equipMargin + '%') + '</span>');
+  }
+  if (best.__rob && best.__rob.failRate != null) {
+    var fok = best.__rob.failRate <= 5;
+    items.push('<span class="sc ' + (fok ? 'good' : 'mid') + '">' + (fok ? '✅' : '⚠️') + ' 产线稳健：波动失败率 ' + best.__rob.failRate.toFixed(1) + '%</span>');
+  }
+  if (!items.length) return '';
+  return '<div class="ob-guards" style="display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:8px;font-size:12px;line-height:1.7">' + items.join('') + '</div>';
+}
 function buildOptResultHtml(best, cands, obj) {
   var overall = best.analysis.scores.overall;
   var ph = best.curve.physics || {};
@@ -10708,6 +10755,21 @@ function buildOptResultHtml(best, cands, obj) {
     var robCls = (bestRob.failRate != null && bestRob.failRate <= 5) ? 'good' : (bestRob.failRate != null && bestRob.failRate <= 15) ? 'mid' : 'low';
     robHtml = '<div class="ob-rob">产线波动稳健性：失败率 <b class="sc ' + robCls + '">' + failTxt + '</b> · 周期 P95 <b>' + p95Txt + '</b> · N=' + (bestRob.n || 0) + ' 次模拟</div>';
   }
+  // v3.99 压缩 vs 基准（保守手工配方）+ 守卫清单
+  // baseCurveOpt：由调用方用「用户表单原始批次」算出的保守安全基线（最有意义）；未提供时退化为同批保守基线
+  var baseCurve = (arguments.length > 3 && arguments[3] && arguments[3].totalTime > 0) ? arguments[3] : optBaselineCurve(best.input);
+  var compressHtml = '', guardHtml = '';
+  if (baseCurve && baseCurve.totalTime > 0) {
+    var _bt = baseCurve.totalTime, _ot = best.curve.totalTime;
+    var _save = Math.round((1 - _ot / _bt) * 100);
+    if (_save >= 0) {
+      var _ccls = _save >= 40 ? 'good' : _save >= 15 ? 'mid' : 'low';
+      compressHtml = '<div class="ob-compress" style="margin-top:8px;font-size:13px;color:var(--c-text-light)">📉 周期：保守基准 ' + _bt + 'h → 最优 ' + _ot + 'h（<b class="sc ' + _ccls + '">压缩 ' + _save + '%</b>）</div>';
+    } else {
+      compressHtml = '<div class="ob-compress" style="margin-top:8px;font-size:13px;color:var(--c-text-light)">⚖️ 周期：保守基准 ' + _bt + 'h → 最优 ' + _ot + 'h（保守基准更短 ' + Math.abs(_save) + '%）</div>';
+    }
+  }
+  guardHtml = optGuardListHtml(best);
   var bestHtml = '<div class="opt-best">'
     + '<div class="ob-ring"><svg viewBox="0 0 36 36" width="84" height="84">'
     + '<circle cx="18" cy="18" r="15.9" fill="none" stroke="#e2e8f0" stroke-width="4"></circle>'
@@ -10746,7 +10808,7 @@ function buildOptResultHtml(best, cands, obj) {
       + '</tr>';
   }).join('');
   var cmpHtml = '<div class="opt-cmp"><table><thead><tr><th>#</th><th>保护剂</th><th>模式</th><th>退火</th><th>可行性</th><th>周期</th><th>残水</th><th>稳健(失败率)</th></tr></thead><tbody>' + cmpRows + '</tbody></table></div>';
-  return bestHtml + sbHtml + whyHtml + riskHtml + runnersHtml + cmpHtml;
+  return bestHtml + compressHtml + guardHtml + sbHtml + whyHtml + riskHtml + runnersHtml + cmpHtml;
 }
 
 // ---- 下拉填充（快速向导 + 优化器 + 工艺优化页） ----
@@ -10846,7 +10908,8 @@ function quickRecipeGenerate() {
       if (!cands || !cands.length) { if (resEl) resEl.innerHTML = '未找到可行配方'; return; }
       var best = cands[0];
       window.__qwBest = best;
-      var html = buildOptResultHtml(best, cands, obj);
+      var baseRef = optBaselineCurve(base); // 用户表单原始批次的保守安全基线
+      var html = buildOptResultHtml(best, cands, obj, baseRef);
       html += '<div style="margin-top:8px"><button class="btn btn-p btn-sm" onclick="applyOptToCurve(window.__qwBest.input)">🚀 应用到曲线页</button> <button class="btn btn-s btn-sm" onclick="saveAsCustomRecipe(window.__qwBest.input)">★ 存为配方</button></div>';
       if (resEl) resEl.innerHTML = html;
     } catch (e) { if (resEl) resEl.innerHTML = '生成出错: ' + e.message; }
@@ -10877,7 +10940,8 @@ function runOptimizer() {
       if (!cands || !cands.length) { if (resEl) resEl.innerHTML = '未找到可行方案'; return; }
       var best = cands[0];
       window.__optCands = cands; window.__optBest = best;
-      var html = buildOptResultHtml(best, cands, obj);
+      var baseRef = optBaselineCurve(base); // 用户表单原始批次的保守安全基线
+      var html = buildOptResultHtml(best, cands, obj, baseRef);
       html += '<div style="margin-top:8px"><button class="btn btn-p btn-sm" onclick="applyOptToCurve(window.__optBest.input)">🚀 应用到曲线页</button> <button class="btn btn-s btn-sm" onclick="saveAsCustomRecipe(window.__optBest.input)">★ 存为配方</button></div>';
       if (resEl) resEl.innerHTML = html;
     } catch (e) { if (resEl) resEl.innerHTML = '优化出错: ' + e.message; }
@@ -11914,6 +11978,70 @@ function doConnectSync(){
 async function doManualPush(){ var r = await pushCloudSync(); showToast(r.ok ? '☁️ 已上传到云端' : '上传失败：' + (r.reason||''), 3500, r.ok ? 'success' : 'error'); }
 async function doManualPull(){ var r = await pullCloudSync(true); if (r.ok && !r.empty) { setTimeout(function(){ location.reload(); }, 400); } else if (r.ok && r.empty) { showToast('远端暂无数据', 3000, 'info'); } else { showToast('拉取失败：' + (r.reason||''), 4000, 'error'); } }
 function doDisconnectSync(){ setSyncCodeLocal(''); showToast('已断开云同步（本机数据保留）', 3500, 'info'); updateSyncStatusUI(); }
+// ===== v3.99 免网络手动备份/恢复（手机↔电脑互通，等价云同步的本地版）=====
+// 覆盖账号/会话/权限/解锁申请/AI数据/课程/进度/主题等全部本地存储键，离线文件互传即同步。
+function exportFullSnapshot() {
+  try {
+    var snap = __buildSnapshot();
+    var payload = { app: 'freeze-dry-web', kind: 'full-snapshot', v: 1, exportedAt: new Date().toISOString(), data: snap };
+    var blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = '冻干工艺_同步备份_' + new Date().toISOString().slice(0, 10) + '.json';
+    a.click(); URL.revokeObjectURL(url);
+    try { localStorage.setItem('lyo.snapshotExportedAt', new Date().toISOString()); } catch (e) {}
+    showToast('✅ 已导出完整数据备份（账号/课程/收藏/主题等）', 4000, 'success');
+    updateSnapshotStatusUI();
+  } catch (e) { showToast('导出失败：' + e.message, 4000, 'error'); }
+}
+function __applySnapshotText(text) {
+  var obj; try { obj = JSON.parse(text); } catch (e) { obj = null; }
+  if (!obj) { showToast('❌ 无法解析文件', 4000, 'error'); return false; }
+  var snap = (obj && obj.data && obj.data.__t) ? obj.data : (obj && obj.__t ? obj : null);
+  if (!snap) { showToast('❌ 文件格式不正确（非本应用同步备份）', 4000, 'error'); return false; }
+  var keys = __syncKeys(); var n = 0;
+  keys.forEach(function (kk) { try { if (snap[kk] != null) { localStorage.setItem(kk, snap[kk]); n++; } } catch (e) {} });
+  try { localStorage.setItem('lyo.snapshotImportedAt', new Date().toISOString()); } catch (e) {}
+  showToast('✅ 已恢复 ' + n + ' 项数据，即将刷新…', 3000, 'success');
+  return true;
+}
+function importFullSnapshotFile(input) {
+  var f = input.files && input.files[0]; if (!f) return;
+  var r = new FileReader();
+  r.onload = function () { try { if (__applySnapshotText(r.result)) { closeActionModal(); setTimeout(function () { location.reload(); }, 300); } } catch (e) { showToast('导入失败：' + e.message, 4000, 'error'); } };
+  r.readAsText(f);
+}
+function importFullSnapshotText() {
+  var el = document.getElementById('snapshotImportText');
+  var t = el ? el.value : '';
+  if (!t || !t.trim()) { showToast('请粘贴备份文本或选择文件', 3000, 'warn'); return; }
+  if (__applySnapshotText(t)) { closeActionModal(); setTimeout(function () { location.reload(); }, 300); }
+}
+function openSnapshotModal() {
+  var html = '<div style="font-size:12px;color:var(--c-text-light);margin-bottom:8px">把备份文件发给另一台设备（手机/电脑），在那一端「恢复备份」即可数据互通。<b>全程离线、无需服务器</b>。也可复制下方文本码粘贴恢复（适合不便传文件的场景）。恢复会用备份覆盖本机同名数据。</div>'
+    + '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">'
+    + '<button class="btn btn-p btn-sm" onclick="exportFullSnapshot()">📦 导出备份文件</button>'
+    + '<label class="btn btn-s btn-sm" style="cursor:pointer">📂 选择文件恢复<input type="file" accept=".json,application/json" style="display:none" onchange="importFullSnapshotFile(this)"></label>'
+    + '</div>'
+    + '<textarea id="snapshotImportText" placeholder="在此粘贴备份文本码…" style="width:100%;height:90px;font-family:monospace;font-size:11px;padding:8px;border:1px solid var(--c-border);border-radius:8px;resize:vertical"></textarea>'
+    + '<div style="margin-top:8px"><button class="btn btn-s btn-sm" onclick="importFullSnapshotText()">📥 用文本码恢复</button></div>';
+  openConfirmModal('📦 备份与恢复（免网络互通）', '', null);
+  var box = document.getElementById('actionDesc');
+  if (box) box.innerHTML = html;
+  var okBtn = document.getElementById('actionOkBtn');
+  if (okBtn) { okBtn.style.display = 'none'; }
+  var cb = document.getElementById('actionCancelBtn');
+  if (cb) { cb.style.display = ''; cb.textContent = '关闭'; }
+}
+function updateSnapshotStatusUI() {
+  var el = document.getElementById('snapshotStatus'); if (!el) return;
+  var ex = '', im = '';
+  try { ex = localStorage.getItem('lyo.snapshotExportedAt') || ''; im = localStorage.getItem('lyo.snapshotImportedAt') || ''; } catch (e) {}
+  var parts = [];
+  if (ex) parts.push('上次导出 ' + new Date(ex).toLocaleString('zh-CN', { hour12: false }));
+  if (im) parts.push('上次恢复 ' + new Date(im).toLocaleString('zh-CN', { hour12: false }));
+  el.innerHTML = parts.length ? '<span style="color:#0d9488">✅ ' + parts.join(' · ') + '</span>' : '<span style="color:var(--c-text-light)">尚未备份/恢复过</span>';
+}
 // 🧹 一键修复：卸载旧 Service Worker + 清空缓存后重载（解决“打不开/卡在旧版”）
 function fixCache(){
   var go = function(){ try { window.location.replace(window.location.pathname + window.location.hash); } catch(e){ window.location.reload(true); } };
@@ -12202,7 +12330,7 @@ function ensurePage(page) {
   if (page === 'thermal') { renderActiveTable(); renderProtectantTable(); renderRefCurves(); }
   else if (page === 'recipes') { renderCatFilter(); renderRecipes(); }
   else if (page === 'defect') { renderDefectCatFilter(); renderDefects(); }
-  else if (page === 'data') { renderHistory(); renderStats(); renderCompareSets(); }
+  else if (page === 'data') { renderHistory(); renderStats(); renderCompareSets(); updateSnapshotStatusUI(); }
   else if (page === 'compare') { renderCompareSets(); populateCompareSelectors(); renderCompare(); }
   else if (page === 'knowledge') { renderKnowledgeCats(); renderKnowledge(); }
   else if (page === 'course') { renderCourse(); }

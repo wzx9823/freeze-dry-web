@@ -2247,7 +2247,8 @@ const APP_VERSION = '3.99';
 const APP_BUILD_ID = '20260820-v366-perm-' + (new Date().toISOString().slice(0,10));
 const APP_UPDATE_MANIFEST = './version.json'; // 可改为托管地址（需 CORS 允许跨域读取）
 function verNum(v){ var n = String(v||'').replace(/[^0-9.]/g,'').split('.'); return (parseInt(n[0]||0,10)*100 + parseInt(n[1]||0,10)); }
-// 自更新下载地址：从当前页面文件名推导（CloudStudio=index.html，本地部署=freeze-dry-web.html）
+// 自更新下载地址：从当前页面所在路径推导，保证「就地更新」——永远回到用户当前打开的这个站点，
+// 不会跳到别处（故兜底也固定为 index.html，见函数内说明）。
 function __updateHtmlUrl() {
   try {
     var base = APP_UPDATE_MANIFEST.replace(/version\.json.*$/i, '');
@@ -2256,7 +2257,9 @@ function __updateHtmlUrl() {
     if (!name || name.indexOf('.') === -1) name = 'index.html';
     return base + name;
   } catch (e) {}
-  return APP_UPDATE_MANIFEST.replace('version.json', 'freeze-dry-web.html');
+  // 兜底固定为 index.html：该文件在所有部署形态（Pages / 本地服务器 / 静态托管）下都一定存在；
+  // 旧兜底 freeze-dry-web.html 在多数部署包里并不存在，会导致「立即更新」跳到 404。
+  return APP_UPDATE_MANIFEST.replace('version.json', 'index.html');
 }
 
 // ========== v3 诊断/可观测性增强（登录无响应专项） ==========
@@ -8339,13 +8342,15 @@ function renderUpdateModal(manifest, hasUpdate) {
       + (notes ? '<div style="background:var(--c-bg-glass);border:1px solid var(--c-border-light);border-radius:10px;padding:10px;font-size:13px">更新内容：<br>' + notes + '</div>' : '')
       + '<div style="font-size:12px;color:var(--c-text-light);margin-top:8px">更新将就地替换当前页面（当前未保存的编辑会丢失）。</div>';
     doBtn.style.display = '';
-    doBtn.dataset.url = manifest.url || __updateHtmlUrl();
+    // 优先「就地更新」：用当前所在站点自己的地址，而不是 version.json 里硬编码的远程 URL。
+    // 否则在本地服务器/其他镜像上点「立即更新」会被跳转到那个远程地址，若其不可达即 404。
+    doBtn.dataset.url = __updateHtmlUrl();
   } else {
     body.innerHTML = '<div style="text-align:center;padding:14px 0">✅ 已是最新版本 <b>v' + esc(APP_VERSION) + '</b></div>'
       + '<div style="font-size:12px;color:var(--c-text-light);margin-top:6px">如界面异常或想强制拉取最新，可点击下方按钮重新加载。</div>';
     doBtn.style.display = '';
     doBtn.textContent = '重新加载最新版本';
-    doBtn.dataset.url = manifest.url || __updateHtmlUrl();
+    doBtn.dataset.url = __updateHtmlUrl();
   }
 }
 function checkAppUpdate(silent) {

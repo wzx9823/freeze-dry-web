@@ -1743,6 +1743,7 @@ body.dark ::selection{ background:rgba(34,211,238,.32); color:#e2e8f0; }
 <div class="card"><div class="card-title"><span>📜</span>历史批次记录</div><div id="historyList"><div style="text-align:center;color:var(--c-text-light);padding:20px">暂无历史记录，生成曲线后点击"存入历史"</div></div></div>
 <div class="card"><div class="card-title"><span>📤</span>数据上传</div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-s btn-sm" onclick="document.getElementById('curveUpload').click()">📈 上传冻干曲线(JSON)</button><input type="file" id="curveUpload" accept=".json,.csv" style="display:none" onchange="handleCurveUpload(event)"><button class="btn btn-s btn-sm" onclick="document.getElementById('historyUpload').click()">📋 上传历史记录</button><input type="file" id="historyUpload" accept=".json,.csv" style="display:none" onchange="handleHistoryUpload(event)"><button class="btn btn-s btn-sm" onclick="document.getElementById('recipeUpload').click()">🧪 上传配方</button><input type="file" id="recipeUpload" accept=".json,.csv" style="display:none" onchange="handleRecipeUpload(event)"></div><div id="uploadPreview" style="margin-top:12px"></div></div>
 <div class="card"><div class="card-title"><span>☁️</span>云同步（手机/电脑互通）</div><div id="syncStatus" style="font-size:13px;margin-bottom:10px;color:var(--c-text-light)">未启用</div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-p btn-sm" onclick="doCreateSync()">➕ 创建同步码</button><button class="btn btn-s btn-sm" onclick="doConnectSync()">🔗 连接同步码</button><button class="btn btn-s btn-sm" onclick="doManualPush()">⬆️ 上传</button><button class="btn btn-s btn-sm" onclick="doManualPull()">⬇️ 拉取</button><button class="btn btn-s btn-sm" onclick="doDisconnectSync()">⛔ 断开</button><button class="btn btn-s btn-sm" onclick="fixCache()">🧹 修复打不开</button></div><div id="snapshotStatus" style="font-size:12px;margin:8px 0 4px;color:var(--c-text-light)">尚未备份/恢复过</div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px"><button class="btn btn-p btn-sm" onclick="openSnapshotModal()">📦 备份/恢复（免网络）</button></div><div style="font-size:12px;color:var(--c-text-light);margin-top:4px;line-height:1.6"><b>📦 免网络互通（推荐）</b>：点「备份/恢复」导出备份文件，发给手机或电脑，另一端「恢复」即数据互通，<b>全程离线、无需服务器</b>。上方「同步码」方式需两端都能访问同一网址（netlify 被墙时请用下方离线方式）。</div></div>
+<div class="card" style="border:1.5px solid #0d9488;background:linear-gradient(180deg,rgba(13,148,136,.06),transparent)"><div class="card-title"><span>👥</span>用户同步（仅账号·手机↔电脑）</div><div style="font-size:12px;color:var(--c-text-light);margin-bottom:8px;line-height:1.6">不同 WiFi 的两台设备互传用户：手机点「导出用户」→ 把<b>文件或文本码</b>发到电脑 → 电脑点「导入用户（合并）」。<b>非实时、免网络，不会覆盖本机已有账号</b>（仅补填缺失、仅新增，不动权限）。</div><div class="js-userSyncStatus" id="userSyncStatusDS" style="font-size:12px;margin-bottom:8px;color:var(--c-text-light)">尚未同步过用户</div><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><button class="btn btn-p btn-sm" onclick="exportUsersOnly()">👥 导出用户</button><label class="btn btn-s btn-sm" style="cursor:pointer">📂 选择文件导入（合并）<input type="file" accept=".json,application/json" style="display:none" onchange="importUsersFile(this)"></label></div><div style="margin-top:8px"><textarea id="usersImportTextDS" placeholder="在此粘贴用户备份文本码…" style="width:100%;height:60px;font-family:monospace;font-size:11px;padding:8px;border:1px solid var(--c-border);border-radius:8px;resize:vertical"></textarea></div><div style="margin-top:6px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-s btn-sm" onclick="importUsersText('usersImportTextDS')">📥 用文本码导入用户</button><button class="btn btn-i btn-sm" onclick="openSnapshotModal()">🔎 完整备份/恢复</button></div></div>
 <div class="card"><div class="card-title"><span>📥</span>数据导出</div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-p btn-sm" onclick="exportData('json')">📥 导出全部(JSON)</button><button class="btn btn-s btn-sm" onclick="exportData('csv')">📋 导出历史(CSV)</button><button class="btn btn-s btn-sm" onclick="clearAllData()">🗑️ 清空数据</button></div></div>
 <div class="card"><div class="card-title"><span>🧮</span>冻干工艺计算器 <span style="margin-left:auto;font-size:12px;color:var(--c-text-light);font-weight:400">物理量估算 · 供设备选型与工艺验证参考</span></div><div style="margin-bottom:10px"><button class="btn btn-p btn-sm" onclick="loadCalcFromCurve()">📥 从曲线页载入参数</button></div><div class="calc-grid"><div><div class="ui-group"><div class="ui-group-title">① 物料与容器</div><div class="fg"><label>装液量(mL)</label><input type="number" id="calcVolume" value="2" step="0.5" oninput="doCalc()"></div><div class="fg"><label>固含量(%)</label><input type="number" id="calcSolid" value="8" step="0.5" oninput="doCalc()"></div><div class="fg"><label>瓶径(mm)</label><input type="number" id="calcVialDia" value="22" step="1" oninput="doCalc()"></div><div class="fg"><label>批量(瓶)</label><input type="number" id="calcBatchSize" value="100" step="10" min="1" oninput="doCalc()"></div></div><div class="ui-group"><div class="ui-group-title">② 工艺参数</div><div class="fg"><label>预冻终温(°C)</label><input type="number" id="calcPreTemp" value="-45" step="1" oninput="doCalc()"></div><div class="fg"><label>一干搁板温度(°C)</label><input type="number" id="calcPriTemp" value="-30" step="1" oninput="doCalc()"></div><div class="fg"><label>一干时间(h)</label><input type="number" id="calcPriTime" value="15" step="0.5" oninput="doCalc()"></div><div class="fg"><label>产品 Tc(°C)</label><input type="number" id="calcTc" value="-35" step="1" oninput="doCalc()"></div></div></div><div class="calc-result" id="calcResult"></div><div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-s btn-sm" onclick="copyCalc()">📋 复制结果</button><button class="btn btn-s btn-sm" onclick="resetCalc()">↺ 重置</button></div></div></div></div>
 
@@ -12107,20 +12108,21 @@ function importUsersFile(input) {
   r.onload = function () { try { if (importUsersMerge(JSON.parse(r.result))) { closeActionModal(); setTimeout(function () { location.reload(); }, 300); } } catch (e) { showToast('导入失败：' + e.message, 4000, 'error'); } };
   r.readAsText(f);
 }
-function importUsersText() {
-  var el = document.getElementById('usersImportText');
+function importUsersText(id) {
+  var el = document.getElementById(id || 'usersImportText');
   var t = el ? el.value : '';
   if (!t || !t.trim()) { showToast('请粘贴用户备份文本码', 3000, 'warn'); return; }
-  try { var obj = JSON.parse(t); if (importUsersMerge(obj)) { closeActionModal(); setTimeout(function () { location.reload(); }, 300); } } catch (e) { showToast('❌ 文本码无法解析', 3000, 'error'); }
+  try { var obj = JSON.parse(t); if (importUsersMerge(obj)) { var m = document.getElementById('actionModal'); if (m && m.style.display !== 'none') closeActionModal(); setTimeout(function () { location.reload(); }, 300); } } catch (e) { showToast('❌ 文本码无法解析', 3000, 'error'); }
 }
 function updateUserSyncStatusUI() {
-  var el = document.getElementById('userSyncStatus'); if (!el) return;
+  var els = document.querySelectorAll('.js-userSyncStatus'); if (!els.length) return;
   var ex = '', im = '';
   try { ex = localStorage.getItem('lyo.usersExportedAt') || ''; im = localStorage.getItem('lyo.usersImportedAt') || ''; } catch (e) {}
   var parts = [];
   if (ex) parts.push('上次导出 ' + new Date(ex).toLocaleString('zh-CN', { hour12: false }));
   if (im) parts.push('上次导入 ' + new Date(im).toLocaleString('zh-CN', { hour12: false }));
-  el.innerHTML = parts.length ? '<span style="color:#0d9488">✅ ' + parts.join(' · ') + '</span>' : '<span style="color:var(--c-text-light)">尚未同步过用户</span>';
+  var html = parts.length ? '<span style="color:#0d9488">✅ ' + parts.join(' · ') + '</span>' : '<span style="color:var(--c-text-light)">尚未同步过用户</span>';
+  els.forEach(function (el) { el.innerHTML = html; });
 }
 
 // 🧹 一键修复：卸载旧 Service Worker + 清空缓存后重载（解决"打不开/卡在旧版"）
@@ -12456,6 +12458,7 @@ function switchPage(page) {
   if (page === 'process') { initProcessAnim(); }
   if (page === 'optparam') { initOptParam(); }
   if (page === 'optimize') { populateOptSelects(); }
+  if (page === 'data') { try { updateUserSyncStatusUI(); } catch (e) {} }
   state.currentPage = page;
   aiSetContext();
   updateBackToTop();

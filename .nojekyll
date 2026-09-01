@@ -1,0 +1,1 @@
+# 禁用 Jekyll：确保 sw.js / _headers 等以下划线开头的文件原样托管，且 index.html 不被当作模板处理

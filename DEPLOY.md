@@ -46,3 +46,43 @@ tcb hosting:deploy . # 部署当前目录到静态托管
 ## 更新到新版本
 
 重复方式一：把新版 `pwa/` 内容重新上传覆盖即可（版本号见页面顶栏 `Web v3.99`）。
+
+---
+
+## 方式三：GitHub Pages（github.io，国内通常比 netlify/vercel 更稳）
+
+适用：你已有 GitHub 账号（`wzx9823`）。零额外凭证，部署后得 `https://wzx9823.github.io/<仓库>/`；若仓库命名为 `wzx9823.github.io`，则得根域 `https://wzx9823.github.io/`。
+
+### 已就绪确认
+- `pwa/` 已含 `.nojekyll`（禁用 Jekyll，避免下划线文件被忽略、`index.html` 被当模板处理）
+- Service Worker 与全部静态资源均用**相对路径**，`github.io/<仓库>/` 子路径下正常工作（已 grep 验证无 `/xxx` 绝对引用）
+
+### 路径 A：网页上传（零命令，推荐首次）
+1. 登录 [github.com](https://github.com)（账号 `wzx9823`）
+2. **New repository** → 命名 `freeze-dry-web`（要根域则命名 `wzx9823.github.io`）→ 选 **Public** → Create
+3. 仓库页 → **Add file → Upload files** → 把本机 `pwa/` 内**全部文件**拖入（含 `index.html`、`sw.js`、`manifest.json`、`icon-192.png`、`icon-512.png`、`qr.js`、`.nojekyll`、`_headers`、`vercel.json`）→ Commit changes
+4. **Settings → Pages** → Branch 选 `main`（或 `master`）/ 文件夹 `(root)` → Save
+5. 等 1–2 分钟构建完成 → 地址：`https://wzx9823.github.io/freeze-dry-web/`（用户页为 `https://wzx9823.github.io/`）
+
+### 路径 B：命令行（需 Personal Access Token，便于后续更新）
+```bash
+cd pwa
+git init -q
+git add -A
+git commit -qm "deploy v3.99"
+git branch -M main
+git remote add origin https://<TOKEN>@github.com/wzx9823/<仓库>.git
+git push -u origin main
+# 之后同路径 A 第 4 步在网页开启 Pages
+```
+> Token 在 github.com → Settings → Developer settings → Personal access tokens → 勾选 `repo` 权限生成。
+
+### 更新到新版
+重复上传/推送覆盖即可；`sw.js` 因 `no-cache` 策略会自动刷新，无需手动清缓存。
+
+### 通道对比补充
+| 通道 | 国内可达性 | 是否需要账号 | 地址形态 | 备注 |
+|------|-----------|--------------|----------|------|
+| GitHub Pages | 通常较好 | GitHub（已有） | `*.github.io/...` | 本备份线 |
+| CloudBase | 极快 | 微信扫码（免 AK） | `*.service.tcloudbase.com` | 最稳永久方案 |
+| Vercel / Netlify | 可能慢/被墙 | 邮箱注册 | `*.vercel.app` / `*.netlify.app` | 你网络曾打不开 |

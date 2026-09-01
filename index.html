@@ -1602,7 +1602,7 @@ body.dark ::selection{ background:rgba(34,211,238,.32); color:#e2e8f0; }
   setTimeout(hideLoader, 6000);
 })();
 </script>
-<div class="top-nav"><h1>冻干</h1><div style="display:flex;align-items:center;gap:8px"><div class="user-bar" id="userBar"><div class="user-info" id="loginEntry" onclick="showLoginModal()"><span style="font-size:14px">👤</span><span style="font-size:13px">登录</span></div></div><button class="nav-btn" onclick="toggleDarkMode()" id="darkBtn" title="切换暗色模式">🌙</button><button class="nav-btn" onclick="window.print()" title="打印">🖨️</button><button class="nav-btn" onclick="checkAppUpdate(false)" title="检查更新">🔄</button><button class="nav-btn" onclick="showDiagnosticModal()" id="diagBtn" title="诊断信息" style="background:linear-gradient(135deg,#ff6b6b,#f06292);color:#fff;font-weight:700">🩺</button><span class="ver" title="长按版本号5秒也能打开诊断面板" id="verBadge">Web v3.98</span></div></div>
+<div class="top-nav"><h1>冻干</h1><div style="display:flex;align-items:center;gap:8px"><div class="user-bar" id="userBar"><div class="user-info" id="loginEntry" onclick="showLoginModal()"><span style="font-size:14px">👤</span><span style="font-size:13px">登录</span></div></div><button class="nav-btn" onclick="toggleDarkMode()" id="darkBtn" title="切换暗色模式">🌙</button><button class="nav-btn" onclick="window.print()" title="打印">🖨️</button><button class="nav-btn" onclick="checkAppUpdate(false)" title="检查更新">🔄</button><button class="nav-btn" onclick="showDiagnosticModal()" id="diagBtn" title="诊断信息" style="background:linear-gradient(135deg,#ff6b6b,#f06292);color:#fff;font-weight:700">🩺</button><span class="ver" title="长按版本号5秒也能打开诊断面板" id="verBadge">Web v3.99</span></div></div>
 <div class="tab-bar" id="tabBar">
   <div class="tab-item active" data-page="curve" onclick="switchPage('curve')"><span class="ti">📈</span>曲线生成</div>
   <div class="tab-item" data-page="image" onclick="switchPage('image')"><span class="ti">📸</span>图片分析</div>
@@ -9824,7 +9824,7 @@ function v3ReportCriticalError(loc, e, extra) {
     var stack = String(e && e.stack ? e.stack : '').slice(0, 2500);
     window.__diagAdd('error', { kind: loc, msg: msg, stack: stack, extra: extra || null });
     // 用户可见的 12 秒顶部强提醒
-    showToast('💥 登录流程出错，请按下方步骤发给开发者（错误: ' + msg.slice(0, 50) + '）\n1️⃣ 点右上角【🩺】或长按【Web v3.98】5秒打开诊断面板\n2️⃣ 截图或【📋复制文字】\n3️⃣ 粘贴给开发者', 15000, 'error');
+    showToast('💥 登录流程出错，请按下方步骤发给开发者（错误: ' + msg.slice(0, 50) + '）\n1️⃣ 点右上角【🩺】或长按【Web v3.99】5秒打开诊断面板\n2️⃣ 截图或【📋复制文字】\n3️⃣ 粘贴给开发者', 15000, 'error');
   } catch(f) {}
 }
 function v3InstallSafeWraps() {

@@ -1575,7 +1575,8 @@ canvas{ max-width:100%; height:auto; }
 /* 曲线生成：桌面端双栏（配置左 / 结果右） */
 @supports (selector(:has(*))){
   @media (min-width:1024px){
-    #page-curve{ display:grid; grid-template-columns:minmax(340px,400px) 1fr; gap:18px; align-items:start; }
+    #page-curve.active{ display:grid; grid-template-columns:minmax(340px,400px) 1fr; gap:18px; align-items:start; }
+    #page-curve.active > .welcome-banner{ grid-column:1 / -1; }
     #page-curve > .card:has(.mode-tabs),
     #page-curve > .card:has(#quickPresets),
     #page-curve > .card:has(.ui-group),
@@ -1925,6 +1926,12 @@ function mobileSearchInput(v){ if (typeof filterTabs === 'function') filterTabs(
 
 <!-- IMAGE PAGE -->
 <div class="page" id="page-image">
+<div class="page-head">
+  <div>
+    <h1>图片分析</h1>
+    <p class="ph-sub">基于像素特征（白度 · 均匀度 · 黄变）的初步质量估算</p>
+  </div>
+</div>
 <div class="card"><div class="card-title"><span>📸</span>冻干粉图片分析</div>
 <div class="upload-zone" onclick="document.getElementById('fileInput').click()"><div class="ui">📁</div><div class="ut">点击上传冻干粉照片<br><span style="font-size:12px;color:var(--c-slate)">支持 JPG/PNG/WebP</span></div></div>
 <input type="file" id="fileInput" accept="image/*" style="display:none" onchange="handleImageUpload(event)">
@@ -1938,12 +1945,24 @@ function mobileSearchInput(v){ if (typeof filterTabs === 'function') filterTabs(
 
 <!-- THERMAL PAGE -->
 <div class="page" id="page-thermal">
+<div class="page-head">
+  <div>
+    <h1>热力学</h1>
+    <p class="ph-sub">活性物与保护剂的共熔点 · 塌陷温度 · Tg′ 参考</p>
+  </div>
+</div>
 <div class="card"><div class="card-title"><span>🧬</span>活性物热力学参考表</div><div class="search-box"><input type="text" id="activeSearch" placeholder="搜索活性物名称..." oninput="filterActiveTable()"></div><div style="overflow-x:auto"><table class="dt" id="activeTable"><thead><tr><th onclick="sortTable('active','name')">活性物</th><th onclick="sortTable('active','maxTemp')">耐温(°C)</th><th onclick="sortTable('active','tgPrime')">Tg'(°C)</th><th onclick="sortTable('active','te')">Te(°C)</th><th onclick="sortTable('active','tc')">Tc(°C)</th><th>热敏性</th><th>说明</th></tr></thead><tbody id="activeTableBody"></tbody></table></div></div>
 <div class="card"><div class="card-title"><span>🧪</span>保护剂热力学参考表</div><div class="search-box"><input type="text" id="protectantSearch" placeholder="搜索保护剂名称..." oninput="filterProtectantTable()"></div><div style="overflow-x:auto"><table class="dt" id="protectantTable"><thead><tr><th onclick="sortTable('protectant','name')">保护剂</th><th onclick="sortTable('protectant','tgPrime')">Tg'(°C)</th><th onclick="sortTable('protectant','tc')">Tc(°C)</th><th>类型</th><th>说明</th></tr></thead><tbody id="protectantTableBody"></tbody></table></div></div>
 <div class="card"><div class="card-title"><span>📖</span>参考工艺曲线</div><div id="refCurvesArea"></div></div></div>
 
 <!-- RECIPES PAGE -->
 <div class="page" id="page-recipes">
+<div class="page-head">
+  <div>
+    <h1>配方库</h1>
+    <p class="ph-sub">预设与自定义配方，投产前请经小试/中试验证</p>
+  </div>
+</div>
 <div class="card"><div class="card-title"><span>🧪</span>配方库 <span style="margin-left:auto;font-size:13px;color:var(--c-text-light)" id="recipeCount"></span></div><div class="disclaimer-banner">⚠️ 配方库中的参数为<strong>行业经验范围示例</strong>，并非针对您具体物料的验证结果。请结合本工具的活性物/保护剂热力学参数库自行核算，并经<strong>小试/中试</strong>确认后方可投产。带「参考·待验证」标签的曲线尤其需要先验证。</div><div class="search-box"><input type="text" id="recipeSearch" placeholder="搜索配方名称、活性物..." oninput="filterRecipes()"></div><div class="cat-filter" id="catFilter"></div><div class="r-grid" id="recipeGrid"></div><div class="recipe-pager" id="recipePager"></div></div>
 <div class="card"><div class="card-title"><span>➕</span>添加自定义配方</div>
 <div class="ui-group"><div class="ui-group-title">① 基础信息</div>
@@ -1959,6 +1978,12 @@ function mobileSearchInput(v){ if (typeof filterTabs === 'function') filterTabs(
 
 <!-- DEFECT PAGE -->
 <div class="page" id="page-defect">
+<div class="page-head">
+  <div>
+    <h1>缺陷诊断</h1>
+    <p class="ph-sub">不良品缺陷库与针对性工艺修正</p>
+  </div>
+</div>
 <div class="card"><div class="card-title"><span>⚠️</span>不良品缺陷诊断 <span style="margin-left:auto;font-size:13px;color:var(--c-text-light)" id="defectCount"></span></div><div class="search-box"><input type="text" id="defectSearch" placeholder="搜索缺陷名称、原因、处理方法..." oninput="filterDefects()"></div><div class="cat-filter" id="defectCatFilter"></div><div style="display:flex;gap:8px;margin-bottom:12px"><button class="btn btn-s btn-sm" onclick="expandAllDefects(true)">全部展开</button><button class="btn btn-s btn-sm" onclick="expandAllDefects(false)">全部收起</button></div><div id="defectList"></div></div>
 <div class="card" id="dcCard">
   <div class="card-title"><span>🛠</span>缺陷针对性工艺修正 <span style="margin-left:auto;font-size:12px;color:var(--c-text-light);font-weight:400">输入问题工艺 → 自动识别缺陷 → 生成修正方案</span></div>
@@ -2008,6 +2033,12 @@ function mobileSearchInput(v){ if (typeof filterTabs === 'function') filterTabs(
 
 <!-- COMPARE PAGE -->
 <div class="page" id="page-compare">
+<div class="page-head">
+  <div>
+    <h1>配方对比</h1>
+    <p class="ph-sub">多曲线并排叠加与参数差异分析</p>
+  </div>
+</div>
 <div class="card"><div class="card-title"><span>⚖️</span>多配方并排对比 <span style="font-size:12px;color:var(--c-text-light);font-weight:400">（最多对比 3 条：当前曲线 / 参考曲线 / 配方库）</span></div>
   <div class="cmp-src">
     <button class="btn btn-p btn-sm" onclick="addCurrentToCompare()">➕ 加入当前曲线</button>
@@ -2060,6 +2091,12 @@ function mobileSearchInput(v){ if (typeof filterTabs === 'function') filterTabs(
 
 <!-- COURSE PAGE -->
 <div class="page" id="page-course">
+<div class="page-head">
+  <div>
+    <h1>操作课程</h1>
+    <p class="ph-sub">12 章 38 课 · 零基础冻干操作员培训</p>
+  </div>
+</div>
 <div class="card">
   <div class="card-title"><span>🎓</span>冻干机操作学习课程
     <span style="margin-left:auto;font-size:13px;color:var(--c-text-light);display:flex;gap:14px;align-items:center">
@@ -2082,6 +2119,12 @@ function mobileSearchInput(v){ if (typeof filterTabs === 'function') filterTabs(
 
 <!-- PROCESS ANIMATION PAGE -->
 <div class="page" id="page-process">
+<div class="page-head">
+  <div>
+    <h1>工艺动画</h1>
+    <p class="ph-sub">预冻 → 一次升华 → 二次升华 全程演示</p>
+  </div>
+</div>
 <div class="card">
   <div class="card-title"><span>🎬</span>冻干过程动画 <span style="margin-left:auto;font-size:12px;color:var(--c-text-light);font-weight:400">预冻 → 一次升华 → 二次升华 全程演示</span></div>
   <div class="anim-stage" id="animStage">
@@ -2114,6 +2157,12 @@ function mobileSearchInput(v){ if (typeof filterTabs === 'function') filterTabs(
 
 <!-- OPTIMIZE PAGE -->
 <div class="page" id="page-optimize">
+<div class="page-head">
+  <div>
+    <h1>快速配方优化</h1>
+    <p class="ph-sub">智能推荐配方与参数寻优</p>
+  </div>
+</div>
 <div class="card"><div class="card-title"><span>🧰</span>快速配方 / 参数优化 <span style="margin-left:auto;font-size:12px;color:var(--c-text-light)">基于热力学与工艺可行性评分的智能推荐</span></div>
 <div class="opt-tabs">
   <div class="opt-tab active" data-opt="wizard" onclick="setOptView('wizard')">⚡ 快速配方向导</div>
@@ -2304,6 +2353,12 @@ function mobileSearchInput(v){ if (typeof filterTabs === 'function') filterTabs(
 
 <!-- ADMIN PAGE -->
 <div class="page" id="page-admin">
+<div class="page-head">
+  <div>
+    <h1>管理后台</h1>
+    <p class="ph-sub">用户与权限管理 · 仅管理员可见</p>
+  </div>
+</div>
 <div class="card"><div class="card-title"><span>👑</span>管理后台</div>
 <div class="admin-stats" id="adminStats"></div>
 <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;align-items:center">
@@ -2370,10 +2425,10 @@ function mobileSearchInput(v){ if (typeof filterTabs === 'function') filterTabs(
 <!-- Phone Login -->
 <div class="login-panel active" id="loginPanel-phone">
 <div class="login-inline-msg" id="loginInlineMsg" style="display:none"></div>
-<div id="loginRememberedHint" class="login-remember" style="display:none">📌 已为你记住上次手机号</div>
-<div class="login-input-group"><label>手机号码</label><input type="tel" id="loginPhone" placeholder="请输入11位手机号" maxlength="11" oninput="onPhoneInput()" onkeydown="if(event.key==='Enter'){doPhoneLogin();}"></div>
-<div class="login-input-group"><label>验证码</label><div class="sms-row"><input type="text" id="loginCode" placeholder="6位验证码" maxlength="6" onkeydown="if(event.key==='Enter'){doPhoneLogin();}"><button class="sms-btn" id="smsBtn" onclick="sendSmsCode(false)">获取验证码</button></div></div>
-<div class="login-input-group" style="margin-top:4px"><label style="font-size:12px;color:var(--c-text-light)">密码登录（可选，与验证码二选一）</label><div style="position:relative"><input type="password" id="loginPwd" placeholder="6位以上密码，未注册可跳过" onkeydown="if(event.key==='Enter'){doPhoneLogin();}"><button type="button" id="loginPwdToggle" onclick="togglePwdVis('loginPwd','loginPwdToggle')" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);border:none;background:transparent;cursor:pointer;font-size:15px;padding:0;line-height:1">👁</button></div></div>
+<div id="loginRememberedHint" class="login-remember" style="display:none">📌 已为你记住上次手机号 <span style="cursor:pointer;color:#2563eb;text-decoration:underline" onclick="clearRememberedPhone()">不是本人？清除</span></div>
+<div class="login-input-group"><label>手机号码</label><input type="tel" id="loginPhone" placeholder="请输入11位手机号" maxlength="11" oninput="onPhoneInput(this)" onkeydown="if(event.key==='Enter'){doPhoneLogin();}"></div>
+<div class="login-input-group"><label>验证码</label><div class="sms-row"><input type="text" id="loginCode" placeholder="6位验证码" maxlength="6" oninput="onCodeInput(this)" onkeydown="if(event.key==='Enter'){doPhoneLogin();}"><button class="sms-btn" id="smsBtn" onclick="sendSmsCode(false)">获取验证码</button></div></div>
+<div class="login-input-group" style="margin-top:4px"><label style="font-size:12px;color:var(--c-text-light)">密码登录（可选，与验证码二选一）<span style="cursor:pointer;color:#2563eb;text-decoration:underline;margin-left:6px" onclick="forgotPwdHint()">忘记密码？</span></label><div style="position:relative"><input type="password" id="loginPwd" placeholder="6位以上密码，未注册可跳过" onkeydown="if(event.key==='Enter'){doPhoneLogin();}"><button type="button" id="loginPwdToggle" onclick="togglePwdVis('loginPwd','loginPwdToggle')" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);border:none;background:transparent;cursor:pointer;font-size:15px;padding:0;line-height:1">👁</button></div></div>
 <button class="oauth-btn oauth-phone" id="phoneLoginBtn" onclick="doPhoneLogin()">📱 手机号登录</button>
 <div class="login-lockbox" id="loginLockBox" style="display:none"></div>
 <!-- 用户库码登录：常用功能，常驻可折叠卡片（降级首屏冗长） -->
@@ -2401,10 +2456,10 @@ function mobileSearchInput(v){ if (typeof filterTabs === 'function') filterTabs(
 <!-- 模式=注册：仅手机号注册 1 个面板 -->
 <div data-login-mode="register" style="display:none">
 <div class="login-inline-msg" id="regInlineMsg" style="display:none"></div>
-<div class="login-input-group"><label>手机号码 *</label><input type="tel" id="regPhone" placeholder="请输入11位手机号" maxlength="11" oninput="onPhoneInput()" onkeydown="if(event.key==='Enter'){doPhoneRegister();}"></div>
+<div class="login-input-group"><label>手机号码 *</label><input type="tel" id="regPhone" placeholder="请输入11位手机号" maxlength="11" oninput="onPhoneInput(this)" onkeydown="if(event.key==='Enter'){doPhoneRegister();}"></div>
 <div class="login-input-group"><label>中文昵称 *</label><input type="text" id="regName" placeholder="2-20 位中文字符，例如：张三" maxlength="20" onkeydown="if(event.key==='Enter'){doPhoneRegister();}"></div>
 <div class="login-input-group"><label>登录密码 *</label><div style="position:relative"><input type="password" id="regPwd" placeholder="至少 8 位，含字母/数字/符号中两类" oninput="onRegPwdInput()" onkeydown="if(event.key==='Enter'){doPhoneRegister();}"><button type="button" id="regPwdToggle" onclick="togglePwdVis('regPwd','regPwdToggle')" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);border:none;background:transparent;cursor:pointer;font-size:15px;padding:0;line-height:1">👁</button></div><div style="margin-top:6px;display:flex;align-items:center;gap:8px"><div style="flex:1;height:6px;background:var(--c-border-light);border-radius:4px;overflow:hidden"><div id="regPwdStrength" style="height:100%;width:0%;background:#e5e7eb;transition:width .2s,background .2s"></div></div><span id="regPwdStrengthLabel" style="font-size:12px;min-width:52px;text-align:right;color:var(--c-text-light)"></span></div></div>
-<div class="login-input-group"><label>短信验证码 *</label><div class="sms-row"><input type="text" id="regCode" placeholder="6位验证码" maxlength="6" onkeydown="if(event.key==='Enter'){doPhoneRegister();}"><button class="sms-btn" id="regSmsBtn" onclick="sendSmsCode(true)">获取验证码</button></div></div>
+<div class="login-input-group"><label>短信验证码 *</label><div class="sms-row"><input type="text" id="regCode" placeholder="6位验证码" maxlength="6" oninput="onCodeInput(this)" onkeydown="if(event.key==='Enter'){doPhoneRegister();}"><button class="sms-btn" id="regSmsBtn" onclick="sendSmsCode(true)">获取验证码</button></div></div>
 <button class="oauth-btn oauth-phone" id="phoneRegBtn" onclick="doPhoneRegister()">📝 完成注册并登录</button>
 <div class="sms-hint" id="regSmsHint" style="display:none"></div>
 </div>
@@ -8319,6 +8374,18 @@ function simpleHash(s) {
 function __isValidUser(u) {
   return u && typeof u === 'object' && typeof u.id === 'string' && typeof u.phone === 'string';
 }
+var _ROLE_WHITELIST = ['admin','enterprise','vip','L5','L4','L3','L2','L1','L0','free','guest'];
+// v3.992：角色白名单归一化——仅 ADMIN_PHONES 可持有 admin；其余手机号若被本地篡改成 admin 一律降级，
+// 防止离线单文件应用被人为改 localStorage 提权（管理员兜底在 loadUsers 末尾仍按手机号强制提权）。
+function __normalizeUserRole(u) {
+  if (!u || typeof u !== 'object') return u;
+  if (_ROLE_WHITELIST.indexOf(u.role) === -1) u.role = 'free';
+  var isAdminPhone = (typeof ADMIN_PHONES !== 'undefined' && Array.isArray(ADMIN_PHONES) && ADMIN_PHONES.indexOf(String(u.phone)) !== -1);
+  if (u.role === 'admin' && !isAdminPhone) {
+    u.role = (u.vipLevel === 'enterprise') ? 'enterprise' : (u.vipLevel === 'vip' ? 'vip' : 'free');
+  }
+  return u;
+}
 function dedupeUsers() {
   if (!state.users || !state.users.length) return 0;
   var byPhone = {}, keep = [], merged = 0;
@@ -8510,6 +8577,7 @@ function loadUsers() {
     } catch(e) { cur = null; }
   }
   if (cur) {
+    __normalizeUserRole(cur); // v3.992：恢复前先归一化角色，防本地篡改提权
     var u = state.users.find(function(x) { return x.id === cur.id; });
     if (!u) {
       if (!(state.users.find(function(x){ return x.phone === cur.phone; }))) {
@@ -8518,6 +8586,7 @@ function loadUsers() {
       }
       u = state.users.find(function(x) { return x.phone === cur.phone; }) || cur;
     }
+    __normalizeUserRole(u); // v3.992：再次归一化（覆盖从 state.users 取出的记录）
     // v3.80：仅当匹配账号结构合法且未被禁用时才恢复会话
     if (u && __isValidUser(u) && u.status !== 'disabled') {
       u.lastLoginAt = new Date().toISOString();
@@ -9169,8 +9238,13 @@ function __afterLoginSuccess(user) {
   state.currentUser = user;
   saveSession();
   saveUsers();
-  pendingSms = null;
+  // v3.992：登录成功后清空所有验证码槽位 + 输入框残留，避免下一位用户看到上一位的码/密码
+  __clearAllSms();
   ['smsHint','regSmsHint'].forEach(function(id){ var h = document.getElementById(id); if (h) h.style.display = 'none'; });
+  ['loginCode','loginPwd','regCode','regPwd','regName','loginLibCode'].forEach(function(id){
+    var el = document.getElementById(id); if (el) { el.value = ''; try { el.style.borderColor = ''; } catch(e2){} }
+  });
+  try { if (document.getElementById('regPwdStrength')) document.getElementById('regPwdStrength').style.width = '0%'; } catch(e2){}
   try { closeLoginModal(); } catch(e) {}
   updateUserBar();
   __filterTabsByRole();
@@ -9227,6 +9301,17 @@ function __restoreLoginBtn(btnId) {
     btn.disabled = false;
     if (btn.dataset._t) btn.textContent = btn.dataset._t;
   } catch(e) {}
+}
+// v3.992：忘记密码引导（离线单文件应用无远程重置，统一引导用验证码登录）
+function forgotPwdHint() {
+  loginInline('login', '🔑 忘记密码？本应用支持「手机号 + 验证码」登录，无需密码。点「获取验证码」用码登录即可；若需改密码请联系管理员。', 'info');
+}
+// v3.992：清除记住的手机号（隐私清理）
+function clearRememberedPhone() {
+  try { localStorage.removeItem('lyo.lastLoginPhone'); } catch(e) {}
+  var lp = document.getElementById('loginPhone'); if (lp) lp.value = '';
+  var rh = document.getElementById('loginRememberedHint'); if (rh) rh.style.display = 'none';
+  loginInline('login', '✅ 已清除记住的手机号', 'ok');
 }
 function showLoginLock(remainMs) {
   try {
@@ -9347,11 +9432,14 @@ function doPhoneRegister() {
   if (pwd.length < 8) { loginInline('reg', '密码至少 8 位（建议字母+数字混合，例如 Lyk12345）', 'err'); showToast('密码至少 8 位（建议字母+数字混合，例如 Lyk12345）', 4000, 'error'); return; }
   var st = passwordStrength(pwd);
   if (st.cats < 2) { loginInline('reg', '密码需包含字母、数字、符号中至少两类（例如 Lyk12345）', 'err'); showToast('密码需包含字母、数字、符号中至少两类（例如 Lyk12345）', 4000, 'error'); return; }
-  if (!pendingSms || pendingSms.phone !== phone || pendingSms.expire <= Date.now()) {
-    loginInline('reg', '验证码已过期，请重新获取', 'err'); showToast('验证码已过期，请重新获取'); pendingSms = null; return;
+  // v3.992：改用 per-mode 槽位 smsSlots.reg
+  var slot = smsSlots.reg;
+  if (!slot || slot.phone !== phone || slot.expire <= Date.now()) {
+    loginInline('reg', '验证码已过期，请重新获取', 'err'); showToast('验证码已过期，请重新获取'); __consumeSms('reg'); return;
   }
-  var codeOk = (code === pendingSms.code) || (demoModeOn() && code === '888888');
+  var codeOk = (code === slot.code) || (demoModeOn() && code === '888888');
   if (!codeOk) { loginInline('reg', '验证码错误', 'err'); showToast('验证码错误', 4000, 'error'); return; }
+  __consumeSms('reg'); // v3.992：校验通过即消费，防止同码重放
   var exists = phoneTaken(phone);
   if (exists) {
     // v3.79：微信/QQ 创建的账号当初未设密码，注册页可"补设密码"（升级为密码登录），而非拒绝
@@ -31697,6 +31785,61 @@ if ('serviceWorker' in navigator && location.protocol.indexOf('http') === 0) {
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
   else boot();
+})();
+</script>
+<script>
+/* _kbpatch_01_articles.js */
+(function(){
+  var PATCH={};
+  PATCH['kb87_001']={s:"冻干（lyophilization）通过低温固态升华移除水分，使活性物质处于玻璃态或结晶态，避免液态下的水解、氧化与酶促降解，从而长期保留活性。",b:[{"h":"一、为什么液态会失活","type":"p","content":"多数化妆品活性物（多肽、VC、益生菌、酶）在液态水相中持续发生水解、氧化、构象改变与微生物代谢。温度升高或 pH 漂移会进一步加速这些路径，常温保存数周即显著衰减。"},{"h":"二、固态稳定的机理","type":"p","content":"冻干把产品先冻结成冰+干燥固相，再在真空下让冰直接升华为水蒸气抽走，最终残留水分仅 1%~3%。极低水分使分子运动近乎冻结，化学反应速率按阿伦尼乌斯定律指数下降，活性得以\"封存\"。"},{"h":"三、关键判据","type":"ul","content":["残留水分 1%~3%：过高仍会缓慢水解，过低可能脆化；","玻璃化转变温度 Tg′ 以上操作才会塌陷失活；","产品温度需全程低于塌陷温度 3~5℃ 的安全裕度。"]},{"h":"四、常见问答","type":"qa","content":[{"q":"冻干是不是绝对不衰减？","a":"不是。冻干把衰减速率降到极低，但长期仍受包装透湿、光照、温度波动影响，故需避光、控湿、必要时冷藏。"}]}]};
+  PATCH['kb87_002']={s:"冰晶越大、比表面积越小，复溶越快；细小冰晶形成致密骨架，孔道细、水渗入慢，复溶时间延长并易有颗粒。",b:[{"h":"一、冰晶与孔道的关系","type":"p","content":"一次干燥时冰晶升华留下贯通孔隙。大冰晶（慢冻/退火产生）留下粗大孔道，复溶时水快速渗入、溶解快；快冻产生大量细小冰晶，骨架致密、孔隙细，复溶偏慢。"},{"h":"二、活性与冰晶的权衡","type":"p","content":"大冰晶有利复溶但可能刺穿载体或损伤对冰晶敏感的结构（如脂质体、细胞）；细小冰晶保护形态却拖慢复溶。需按配方性质选预冻速率与是否退火。"},{"h":"三、关键判据","type":"ul","content":["预冻速率：慢冻(0.5~1℃/min)得大晶、快冻(>5℃/min)得细晶；","退火可粗化冰晶、改善复溶；","复溶目标：多数化妆品粉 10~30s 内完全溶解、无可见颗粒。"]},{"h":"四、常见问答","type":"qa","content":[{"q":"复溶慢一定不好吗？","a":"对粉质外观要求高或活性极娇贵的配方，可接受稍慢复溶以换取结构保护；但若影响使用体验则需优化。"}]}]};
+  PATCH['kb87_003']={s:"共晶点（eutectic point）是混合物完全凝固的温度，共熔点（eutectic melting）是已冻结混合物开始熔化的最低温度；二者方向相反，但常被混用，实际应区分冻/熔。",b:[{"h":"一、概念区分","type":"p","content":"共晶点是降温过程中溶液全部变为固相（冰+盐/糖共晶）的温度；共熔点是升温时该共晶混合物开始熔化的温度。对纯水体系近似相等，对复杂配方（盐、糖、多元醇共存）二者有差异，且受浓度影响。"},{"h":"二、工艺意义","type":"p","content":"预冻必须低于共晶点 5~10℃ 才能保证完全固化，否则残留液相在一次干燥中\"暴沸\"喷瓶。升温时则关注共熔点下方的安全窗口，避免提前熔化塌陷。"},{"h":"三、关键判据","type":"ul","content":["预冻终点温度 ≤ 共晶点 −5℃；","电阻法/热电偶法可实测共晶点（电阻突升即固化）；","含高浓度糖/多元醇体系共晶点更低，需实测而非套用。"]},{"h":"四、常见问答","type":"qa","content":[{"q":"配方改了糖比例，共晶点会变吗？","a":"会显著变化。任何主要赋形剂改动都应重新实测共晶/塌陷温度，再定预冻与干燥上限。"}]}]};
+  PATCH['kb87_004']={s:"塌陷温度（collapse temperature, Tc）是干燥层结构失稳、冰晶熔化导致骨架坍塌的上限；工艺操作上限应取 Tc 减 3~5℃ 裕度。",b:[{"h":"一、塌陷的成因","type":"p","content":"一次干燥时干燥层温度若超过 Tc，其中的无定形区达到玻璃化转变、黏度骤降，冰晶熔化形成液相，干燥层失去支撑而塌陷、起皮、复溶恶化。塌陷是不可逆结构破坏。"},{"h":"二、与 Tg′ 的关系","type":"p","content":"最大浓缩物玻璃化转变温度 Tg′ 是理论下限判据，实际塌陷温度 Tc 常略高于 Tg′（受干燥层结构、升温速率影响）。工程上以 Tc 为准更稳妥。"},{"h":"三、关键判据","type":"ul","content":["产品温度上限 = Tc − 3~5℃；","Tc 靠 DSC 或冻干显微镜实测；","保护剂（蔗糖、海藻糖）可抬高 Tc，扩大安全窗口。"]},{"h":"四、常见问答","type":"qa","content":[{"q":"为什么有时温度没超 Tc 也塌陷？","a":"可能探针位置偏差、搁板均温差、或局部真空不足导致局部过热；应核对多点测温与温度分布验证。"}]}]};
+  PATCH['kb87_005']={s:"残留水分（residual moisture）通常控在 1%~3%：过高加速水解/微生物滋生，过低使多孔结构脆化、活性暴露于界面，且能耗与缩短循环不成正比。",b:[{"h":"一、下限为何不能太低","type":"p","content":"过度解析干燥把水分压到 <1%，会使骨架过度收缩脆化、易碎，并让活性分子暴露在固-气界面加速氧化；同时二次干燥时间倍增，循环成本上升却收效有限。"},{"h":"二、上限为何不能太高","type":"p","content":"水分 >3%~5% 时水解与微生物风险上升，配合剂结晶水合改变晶型，复溶与稳定性下降。对亲水活性物尤需控下限。"},{"h":"三、关键判据","type":"ul","content":["常规目标 1.5%~2.5%；","卡氏法（Karl Fischer）为仲裁方法；","水分活度 aw<0.2 通常对应良好化学稳定。"]},{"h":"四、常见问答","type":"qa","content":[{"q":"残留水分是越低越好吗？","a":"不是。存在最优区间，过低损结构、增成本，应结合稳定性数据定标。"}]}]};
+  PATCH['kb87_006']={s:"标准冻干曲线分预冻、一次干燥（升华）、二次干燥（解析）、压塞出箱四阶段；各阶段目标、温度与真空不同，组合成完整循环。",b:[{"h":"一、四阶段目标","type":"p","content":"预冻使产品完全固化并定型晶型；一次干燥在真空下移除约 90% 冰；二次干燥升温解析吸附水至目标残水；压塞后恢复常压出箱。"},{"h":"二、参数轮廓","type":"p","content":"典型轮廓：搁板 −40~−50℃ 预冻 → 缓慢升到 −20~−30℃ 一次干燥（产品温度远低于 Tc）→ 升到 +20~+40℃ 二次干燥 → 压塞。升温速率与真空需配合避免塌陷。"},{"h":"三、关键判据","type":"ul","content":["一次干燥占时最长（60%~80% 循环）；","终点判据：压力升测试/产品温度趋近板温；","总循环受装液厚度与搁板能力约束。"]},{"h":"四、常见问答","type":"qa","content":[{"q":"能不能跳过某阶段？","a":"不能。预冻不足喷瓶、一次干燥不足残冰、二次干燥不足残水高，各阶段不可省。"}]}]};
+  PATCH['kb87_007']={s:"真空度（腔压）越低，冰的饱和蒸气压与腔压的压差越大，升华驱动力越强；但过低会使产品温度过度下降、传热不足，需配合搁板温度。",b:[{"h":"一、升华驱动力","type":"p","content":"一次干燥速率由冰面饱和蒸气压 P_ice 与腔压 P_ch 之差决定。降低腔压增大压差，升华加快；但 P_ch 过低时产品温度被抽走热量而骤降，若搁板供热不足则升华反而停滞。"},{"h":"二、最佳腔压窗口","type":"p","content":"存在\"最大干燥产量压力\"（MDP），约对应冰温下的饱和蒸气压。工程上常控腔压在 MDP 附近，兼顾速率与产品温度可控。"},{"h":"三、关键判据","type":"ul","content":["一次干燥腔压常见 0.1~0.3 mbar；","低于 MDP 可能\"冷窒息\"拖慢干燥；","真空控制需稳，波动会冲击结构。"]},{"h":"四、常见问答","type":"qa","content":[{"q":"真空越高越好吗？","a":"否。过真空导致产品过冷、供热瓶颈，且能耗高；应取 MDP 附近。"}]}]};
+  PATCH['kb87_008']={s:"一次干燥时产品温度远低于搁板温度，差值由冰层升华吸热与传热阻力决定；该温差是判断是否接近塌陷的关键间接信号。",b:[{"h":"一、温差来源","type":"p","content":"搁板加热经瓶壁、已干层传导至升华界面，冰升华大量吸热使界面温度被\"锁定\"在冰温附近。故产品温度 ≪ 搁板温度，差值反映供热与升华平衡。"},{"h":"二、工艺解读","type":"p","content":"干燥初期温差大（供热受限），随冰减少温差缩小；当产品温度快速逼近搁板温度，提示冰已基本耗尽、进入二次干燥。监控该爬升是终点判据之一。"},{"h":"三、关键判据","type":"ul","content":["一次干燥产品温度常为 −25~−15℃；","产品温度突升≈冰耗尽信号；","探针须插入产品中心，不可贴壁。"]},{"h":"四、常见问答","type":"qa","content":[{"q":"温差小是不是更好？","a":"不一定。温差过小可能意味着已接近终点或供热过量逼近塌陷，需结合阶段解读。"}]}]};
+  PATCH['kb87_009']={s:"解析干燥（二次干燥）在一次干燥后升温，脱除被干燥层吸附/结合的水分（非冰），把残留水分压到 1%~3%，提升化学稳定。",b:[{"h":"一、为何需要二次干燥","type":"p","content":"一次干燥只移除游离冰，干燥层仍吸附约 5%~10% 的结合水。这些水足以驱动水解，必须通过升温降低水蒸气分压把它解析脱除。"},{"h":"二、升温策略","type":"p","content":"冰耗尽后产品不再\"锁温\"，可安全升温至 +20~+40℃（仍在 Tc 裕度内），升高温度使吸附水蒸汽压上升被真空抽走。升温需平缓，避免热冲击开裂。"},{"h":"三、关键判据","type":"ul","content":["二次干燥升温 ≤1~2℃/min；","终点：残水达标 + 压力升测试稳定；","温度受活性热稳定性上限约束。"]},{"h":"四、常见问答","type":"qa","content":[{"q":"二次干燥温度能随便高吗？","a":"不能。受活性热降解温度上限约束，过高会破坏功效物。"}]}]};
+  PATCH['kb87_010']={s:"冻干保护剂三类作用：低温保护（抗冰晶损伤）、干燥保护（替代水维持构象）、玻璃化稳定（成玻璃态封存），常由糖/多元醇/聚合物组合实现。",b:[{"h":"一、三类作用","type":"p","content":"低温保护剂在冻结时降低冰晶损伤（如二甲基亚砜、甘油，但化妆品慎用）；干燥保护剂在脱水时维持蛋白/活性构象（蔗糖、海藻糖）；玻璃化剂形成高 Tg 玻璃态长期稳定。"},{"h":"二、常用组合","type":"p","content":"蔗糖/海藻糖提供干燥保护与玻璃化，甘露醇/山梨醇成晶骨架，透明质酸等多糖增稠保形。组合需兼顾 Tc 抬高与复溶。"},{"h":"三、关键判据","type":"ul","content":["糖:活性 质量比常 2:1~10:1；","海藻糖 Tg 高、保护性优；","避免引入法规限制或致敏辅料。"]},{"h":"四、常见问答","type":"qa","content":[{"q":"只用一种保护剂行吗？","a":"简单体系可，但多数组分需复配以同时满足抗冰、抗干、玻璃化。"}]}]};
+  PATCH['kb87_011']={s:"pH 影响活性物电离态、降解速率与冰点；冻干配方应在保证稳定前提下选缓冲体系把 pH 锁在活性最优区间。",b:[{"h":"一、pH 与稳定性","type":"p","content":"许多活性（VC、肽、酶）在特定 pH 下最稳定。偏离则水解/氧化加速。冻干前 pH 还影响冰点、共晶点与残水结合能。"},{"h":"二、缓冲的选择","type":"p","content":"需用低挥发、冻干友好的缓冲（如磷酸盐、柠檬酸盐、组氨酸），避免铵盐/碳酸盐在真空下产气。缓冲浓度过高会抬高残水与渗透压。"},{"h":"三、关键判据","type":"ul","content":["pH 偏离最适每单位，降解可能翻倍；","缓冲浓度 5~20 mM 常见；","冻干前后 pH 漂移应 <0.5。"]},{"h":"四、常见问答","type":"qa","content":[{"q":"冻干后 pH 变了正常吗？","a":"轻微漂移可接受，若 >0.5 或影响活性则需调整缓冲体系。"}]}]};
+  PATCH['kb87_012']={s:"装液厚度（灌装深度）决定冰层厚度与传热路径；过厚会显著拉长一次干燥、加剧批内不均，是循环时间与均匀性的关键变量。",b:[{"h":"一、厚度的影响","type":"p","content":"干燥从冰表层向内推进，厚装液使升华路径长、阻力大，一次干燥时间近似随厚度平方增长。批内装量差异直接转化为干燥终点差异。"},{"h":"二、均匀性控制","type":"p","content":"同盘装量一致、瓶型一致、搁板均温好，才能批内同步。装量偏差 >5% 会出现\"有的干透有的残冰\"。"},{"h":"三、关键判据","type":"ul","content":["小瓶装液常 2~8 mm 液柱；","装量差异 ≤±3%；","厚度↑需降升温速率保不塌陷。"]},{"h":"四、常见问答","type":"qa","content":[{"q":"装厚一点省瓶可以吗？","a":"可但循环时间大幅上升且风险增高，需重新验证终点。"}]}]};
+  PATCH['kb87_013']={s:"压力升测试（pressure rise test）在隔离真空后测腔压回升速率，用于判断一次干燥是否结束：回升慢=冰已尽，回升快=仍有升华源。",b:[{"h":"一、原理","type":"p","content":"关闭真空阀片刻，若无冰升华，腔压仅因漏率/放气缓慢上升；若仍有冰，升华持续供汽使压力快速升。据此判定冰是否耗尽。"},{"h":"二、操作要点","type":"p","content":"测试时间短（数秒至数十秒）避免产品升温；需在安全温度窗口内；多探头/多瓶取样更可靠。常与产品温度爬升联合判据。"},{"h":"三、关键判据","type":"ul","content":["压力升率 <阈值 = 可转二次干燥；","阈值依设备与配方定，需标定；","仅作辅助，需与温度曲线互证。"]},{"h":"四、常见问答","type":"qa","content":[{"q":"压力升测试能单独定终点吗？","a":"不推荐单独用，应与产品温度、时间联合判据以避免误判。"}]}]};
+  PATCH['kb87_014']={s:"\"速溶\"指复水后快速、完全溶解无颗粒；冻干的多孔骨架天然利于速溶，但需配合合适保护剂与晶型控制。",b:[{"h":"一、速溶的机理","type":"p","content":"冻干产物是轻质多孔海绵，复溶时水沿孔道快速渗入、溶质迅速溶解。骨架孔隙率与亲水性决定速度。"},{"h":"二、影响因子","type":"p","content":"大冰晶（退火）→粗孔→快溶；高糖玻璃态→润湿好；表面活性剂可改善铺展。过度细晶或结皮则慢溶、有颗粒。"},{"h":"三、关键判据","type":"ul","content":["复溶目标 10~30s 全溶；","目测无团块、无砂感；","与消费者体验直接挂钩。"]},{"h":"四、常见问答","type":"qa","content":[{"q":"速溶=高品质吗？","a":"速溶是体验指标，不代表活性高低，需与稳定性、功效并列评估。"}]}]};
+  PATCH['kb87_015']={s:"冻干通过低温+低水分+低水分活度三重抑制微生物：冻结使代谢停滞，干燥使 aw 降至 0.2 以下，多数微生物无法生长。",b:[{"h":"一、三重抑制","type":"p","content":"冻结阶段水成冰，微生物暂停代谢；一次干燥移除游离水；二次干燥把 aw 压到 0.2 以下，细菌/霉菌失去可利用水，增殖与产毒被抑制。"},{"h":"二、并非灭菌","type":"p","content":"冻干是抑制而非杀灭，微生物可能存活但休眠。一旦复水、透湿、升温即恢复活性，故无菌工艺与密封完整性仍关键。"},{"h":"三、关键判据","type":"ul","content":["aw<0.2 多数微生物不生长；","冻干前后需无菌灌装；","复溶后尽快用完。"]},{"h":"四、常见问答","type":"qa","content":[{"q":"冻干品长菌说明什么？","a":"多因初始染菌、灌装污染或密封失效，非冻干本身问题，查无菌与密封。"}]}]};
+  PATCH['kb87_016']={s:"冻干产品有效期由残水、包装透湿、活性热稳定性与光照共同决定；稳定性考察（加速+长期）是定有效期唯一依据。",b:[{"h":"一、失效路径","type":"p","content":"即便冻干，残水、透湿、温度、光照仍可缓慢驱动降解。有效期是这些路径在贮存条件下衰减到可接受下限的时间。"},{"h":"二、如何确定","type":"p","content":"通过 40℃/75%RH 加速 6 月、25℃/60%RH 长期 12~24 月考察，结合降解动力学外推，并留真实货架数据修正。"},{"h":"三、关键判据","type":"ul","content":["加速+长期双轨；","降解物≤限度、含量≥90%；","铝箔/避光密封控湿。"]},{"h":"四、常见问答","type":"qa","content":[{"q":"标 3 年有效期靠什么？","a":"靠稳定性数据外推+留样验证，不可拍脑袋。"}]}]};
+  PATCH['kb87_017']={s:"玻璃化转变温度 Tg（干态）与 Tg′（最大浓缩态）决定固态稳定性上限；贮存温度须低于 Tg，操作温度须低于 Tg′/Tc。",b:[{"h":"一、Tg 与 Tg′","type":"p","content":"Tg′ 是冻结浓缩相玻璃化温度，决定一次干燥安全上限；Tg 是干燥产品玻璃化温度，决定贮存稳定上限。低于 Tg 时分子运动冻结、反应停滞。"},{"h":"二、配方设计","type":"p","content":"高 Tg 保护剂（海藻糖、蔗糖）抬高窗口；多元醇/低分子物降低 Tg。设计目标：Tg − 贮存温度 ≥15~20℃ 裕度。"},{"h":"三、关键判据","type":"ul","content":["贮存温度 < Tg − 安全裕度；","DSC 测 Tg/Tg′；","高 Tg 体系更耐运输波动。"]},{"h":"四、常见问答","type":"qa","content":[{"q":"夏天运输会不会坏？","a":"只要 Tg 远高于运输峰值温度且有避光密封，短期超室温通常可接受，需运输确认。"}]}]};
+  PATCH['kb87_018']={s:"预冻三目标：完全固化（低于共晶点）、形成可控晶型、建立均一冰骨架；三者决定后续升华效率与成品结构。",b:[{"h":"一、三目标","type":"p","content":"①完全固化防喷瓶；②晶型可控（大晶利于复溶、细晶保护结构）；③均一冰骨架保证批内一致。预冻是质量地基。"},{"h":"二、实现手段","type":"p","content":"控降温速率、是否退火、终点温度保持。慢冻+退火得大晶；快冻得细晶；终点低于共晶点 5~10℃ 并保持足够时间。"},{"h":"三、关键判据","type":"ul","content":["终点 ≤ 共晶点 −5℃；","保持 1~2h 确保全固化；","退火 0.5~2h 粗化冰晶。"]},{"h":"四、常见问答","type":"qa","content":[{"q":"预冻多久算够？","a":"以中心温度达标+保持时间为准，非固定时长，按装量与设备定。"}]}]};
+  PATCH['kb87_019']={s:"退火（annealing）是预冻中回升到共晶点附近保持，使冰晶粗化、消除亚稳相、提高 Tc；适用于细晶体系或晶型不均配方。",b:[{"h":"一、何时用","type":"p","content":"快冻产生大量细小冰晶、玻璃态包裹未结晶水时，退火让冰晶生长、共晶相完成结晶，提升塌陷温度并改善复溶与干燥速率。"},{"h":"二、参数","type":"p","content":"升温至略低于共晶点（如 −20~−25℃）保持 0.5~2h 再降回，避免超过共晶点致熔化。"},{"h":"三、关键判据","type":"ul","content":["退火温 < 共晶点 2~5℃；","保持 0.5~2h；","DSC 验证结晶完成。"]},{"h":"四、常见问答","type":"qa","content":[{"q":"所有配方都要退火吗？","a":"否。细晶或玻璃态主导、复溶差时才需，粗晶体系反而可省。"}]}]};
+  PATCH['kb87_020']={s:"一次干燥升温策略：先\"锁定\"在冰温附近匀速供热，待冰减薄再渐进升板温；忌快速拉高致局部超 Tc 塌陷。",b:[{"h":"一、策略核心","type":"p","content":"初期供热受限、产品温度低；随冰层变薄逐步升板温维持升华。板温曲线应\"慢爬\"，让产品温度始终低于 Tc 裕度。"},{"h":"二、联调真空","type":"p","content":"升温与腔压配合：降温速率与真空共同决定产品温度。常用\"阶梯升温+恒压\"或\"恒板温+降真空\"。"},{"h":"三、关键判据","type":"ul","content":["板温升率 0.2~0.5℃/min；","产品温度全程 < Tc−3℃；","监控多瓶温度分布。"]},{"h":"四、常见问答","type":"qa","content":[{"q":"为什么板温能升但产品温不动？","a":"冰升华吸热\"锁温\"，说明仍在一次干燥主段，属正常。"}]}]};
+  PATCH['kb87_021']={s:"一次干燥真空控制目标：稳定在 MDP 附近，既保升华速率又防过冷与塌陷；波动会冲击干燥层结构。",b:[{"h":"一、控制目标","type":"p","content":"腔压过低→产品过冷、供热瓶颈；过高→逼近塌陷、速率降。取最大干燥产量压力附近最稳。"},{"h":"二、实现","type":"p","content":"用真空控制阀（蝶阀）按设定压闭环；可配惰性气体（N₂）微调压。需排除漏率与泵能力不足。"},{"h":"三、关键判据","type":"ul","content":["腔压 0.1~0.3 mbar 常见；","波动 ≤±10%；","与板温联动设定。"]},{"h":"四、常见问答","type":"qa","content":[{"q":"真空波动大怎么查？","a":"先查漏率、蝶阀响应、泵抽速，再查传感器。"}]}]};
+  PATCH['kb87_022']={s:"二次干燥升板温技巧：冰尽后平稳升至 +20~+40℃，速率 ≤1~2℃/min，受活性热上限与 Tg 约束；升温过快致开裂。",b:[{"h":"一、技巧","type":"p","content":"确认冰尽（温度爬升+压力升测试）后再升；分段升比一步到位更稳；末段保温确保残水均匀达标。"},{"h":"二、约束","type":"p","content":"上限取活性降解温度与 Tg 中较低者；含热敏肽/酶宜 ≤30℃。"},{"h":"三、关键判据","type":"ul","content":["升温 ≤1~2℃/min；","末保温 1~3h；","残水达标即停，勿过度。"]},{"h":"四、常见问答","type":"qa","content":[{"q":"二次干燥可以高温快烘吗？","a":"热敏体系不行，高温直接损活性，须控上限。"}]}]};
+  PATCH['kb87_023']={s:"压塞（stoppering）在一次干燥后、仍真空下用液压把胶塞压入瓶口，再破空出箱；时机错会回潮或污染。",b:[{"h":"一、时机","type":"p","content":"应在残水达标、腔体仍真空时压塞，避免破空后湿气回吸。压塞后缓慢破空（经无菌过滤空气）防冲击。"},{"h":"二、无菌要点","type":"p","content":"压塞在 A 级层流/隔离器内进行；破空气体须无菌过滤；出箱即转入密封包装。"},{"h":"三、关键判据","type":"ul","content":["真空下压塞；","破空用 0.22μm 过滤空气；","压塞力均匀、无跳塞。"]},{"h":"四、常见问答","type":"qa","content":[{"q":"压塞后还要不要立即包装？","a":"应尽早转入铝箔/避光密封，防环境湿气回吸。"}]}]};
+  PATCH['kb87_024']={s:"曲线中的\"保持段\"（soak/hold）是温度或真空在台阶间维持恒定的一段时间，用于固化、均温或结构稳定，是质量一致性的关键。",b:[{"h":"一、作用","type":"p","content":"预冻保持确保全固化；干燥段间的保持让批内温度均一、避免台阶冲击；二次干燥末保持让残水均匀。"},{"h":"二、设定","type":"p","content":"保持时长依装量与设备热惯性定，需验证而非拍定；过短不均、过长拖循环。"},{"h":"三、关键判据","type":"ul","content":["预冻保持 1~2h；","台阶间保持 0.5~1h；","以温度均匀为判据。"]},{"h":"四、常见问答","type":"qa","content":[{"q":"保持段能省吗？","a":"批量大或均温差时不能省，否则批内不一致。"}]}]};
+  PATCH['kb87_025']={s:"冻干终点判据组合：产品温度趋近板温 + 压力升测试稳定 + 残水达标 + 时间经验；多判据互证最可靠。",b:[{"h":"一、多判据","type":"p","content":"单一判据易误判：温度爬升可能受供热影响，压力升受漏率影响。组合使用并设冗余更稳。"},{"h":"二、现场操作","type":"p","content":"先以温度+压力升确认冰尽，二次干燥末测残水（或在线）达标即可结束；保留批记录追溯。"},{"h":"三、关键判据","type":"ul","content":["产品温度≈板温；","压力升率低于阈值；","残水 1%~3%。"]},{"h":"四、常见问答","type":"qa","content":[{"q":"只凭时间够吗？","a":"不够。同配方不同设备/装量时间会变，须判据驱动。"}]}]};
+  PATCH['kb87_026']={s:"降温速率决定晶型：慢冻(0.5~1℃/min)得大冰晶、粗孔；快冻(>5℃/min)得细晶、玻璃态多；按配方保护需求选。",b:[{"h":"一、速率效应","type":"p","content":"慢冻使水分子有序排列成大晶，利于复溶但可能损结构；快冻形成大量晶核、细晶与部分玻璃态，保护形态但复溶慢。"},{"h":"二、选则","type":"p","content":"对冰晶敏感的脂质体/细胞用快冻；对复溶要求高、结构稳的用慢冻+退火。"},{"h":"三、关键判据","type":"ul","content":["慢冻 0.5~1℃/min；","快冻 >5℃/min；","晶型以显微/DSC 验证。"]},{"h":"四、常见问答","type":"qa","content":[{"q":"同配方降温速率能随便换吗？","a":"换速率会改变晶型与复溶，须重新验证。"}]}]};
+  PATCH['kb87_027']={s:"回温（升温）速率过快致热应力不均、干燥层开裂/脱皮；应平缓升温并配合均温，尤其厚装液与玻璃态体系。",b:[{"h":"一、开裂机理","type":"p","content":"快速升温使表层与内层膨胀不均、蒸汽骤产，干燥层受剪切开裂或起皮，影响外观与复溶。"},{"h":"二、对策","type":"p","content":"控制升率 ≤0.5~1℃/min（一次）、≤1~2℃/min（二次）；保证搁板均温；必要时加保持段缓冲。"},{"h":"三、关键判据","type":"ul","content":["一次升率 0.2~0.5℃/min；","二次升率 1~2℃/min；","开裂率纳入外观检验。"]},{"h":"四、常见问答","type":"qa","content":[{"q":"轻微开裂影响使用吗？","a":"若不影响残水与活性、仅外观，可接受；严重开裂致复溶差则需改曲线。"}]}]};
+  PATCH['kb87_028']={s:"批量放大时阶段需校正：装量增加使干燥时间非线性延长，搁板均温与传热变差，须重标曲线与终点判据。",b:[{"h":"一、放大效应","type":"p","content":"小试装量薄、传热好；放大后装厚、批内温差大、干燥时间近似随厚度平方增，原曲线直接套用会残冰或超温。"},{"h":"二、校正","type":"p","content":"按装量重算干燥时间，降升率、加保持段、增温度探头；做中试桥接再放大。"},{"h":"三、关键判据","type":"ul","content":["干燥时间随厚度²估；","批内温差 ≤±2℃；","中试→放大阶梯验证。"]},{"h":"四、常见问答","type":"qa","content":[{"q":"小试曲线能直接上量产吗？","a":"不建议，须按装量与设备校正并经中试验证。"}]}]};
+  PATCH['kb87_029']={s:"间歇冻干（批式）与连续冻干阶段差异：批式四阶段串行于同一腔，连续式各阶段分舱流水，周期与放大逻辑不同。",b:[{"h":"一、差异","type":"p","content":"批式装料→冻→干→出整批完成；连续式预冻舱、干燥舱、压塞舱并行流水，单件周期短、产能高但设备复杂。"},{"h":"二、选型","type":"p","content":"多品种小批用批式灵活；大单品量产用连续式提效。化妆品多 SKU 常以批式为主。"},{"h":"三、关键判据","type":"ul","content":["批式灵活、验证简单；","连续式产能高、CAPEX 高；","阶段边界在连续式需精准传递。"]},{"h":"四、常见问答","type":"qa","content":[{"q":"连续冻干适合化妆品吗？","a":"大单品可考虑，多 SKU 小批仍以批式经济。"}]}]};
+  PATCH['kb87_030']={s:"冻干曲线数字化记录：用 SCADA/数据系统采集板温、产品温、腔压、冷阱温并留档，支撑追溯、偏差分析与 AI 优化。",b:[{"h":"一、记录内容","type":"p","content":"时间戳 + 搁板温/产品温/腔压/冷阱温/真空泵状态，按 GMP 电子记录要求防篡改、可审计。"},{"h":"二、价值","type":"p","content":"积累曲线→偏差比对→工艺能力评估→AI 寻优。是质量持续改进与合规的基础。"},{"h":"三、关键判据","type":"ul","content":["采样 ≤1 次/分钟；","审计追踪 + 电子签名；","数据可导出分析。"]},{"h":"四、常见问答","type":"qa","content":[{"q":"手写记录行吗？","a":"小规模可，但难以支撑 AI 优化与严格追溯，建议数字化。"}]}]};
+  PATCH['kb87_031']={s:"冻干机四大组成：制冷系统、真空系统、加热/搁板系统、控制系统；外加冷阱捕集水蒸气，四者协同完成冻干循环。",b:[{"h":"一、四大组成","type":"p","content":"制冷提供预冻与冷阱低温；真空抽走水蒸气；搁板加热提供升华热；控制系统协调时序与报警。冷阱拦截水汽保护真空泵。"},{"h":"二、协同","type":"p","content":"任一短板限整体：制冷不足冻不透、真空差升不快、加热不均温、控制弱则难复现。"},{"h":"三、关键判据","type":"ul","content":["冷阱 ≤−50~−60℃；","极限真空 ≤0.01 mbar；","搁板均温 ≤±1℃。"]},{"h":"四、常见问答","type":"qa","content":[{"q":"买冻干机先看哪项？","a":"看产能匹配与四大系统能力均衡，而非单看某项参数。"}]}]};
+  PATCH['kb87_032']={s:"冷阱（condenser）捕集升华的水蒸气并使其凝华，保护真空泵并维持腔压；温度越低捕集能力越强，通常 ≤−50℃。",b:[{"h":"一、作用","type":"p","content":"冷阱表面远低于冰升华温度，水蒸气撞上即凝华成冰被移除，使腔压维持低位、真空泵只抽不凝气。"},{"h":"二、温度与容量","type":"p","content":"冷阱温越低（−50~−60℃或更低）饱和蒸气压越低、捕集越强；容量须大于单批总水量，否则过载返霜。"},{"h":"三、关键判据","type":"ul","content":["冷阱温 ≤−50℃；","容量 > 单批水当量；","化霜彻底防交叉污染。"]},{"h":"四、常见问答","type":"qa","content":[{"q":"冷阱结冰太多会怎样？","a":"捕集饱和后腔压回升、干燥变慢，需及时化霜或选大容量。"}]}]};
+  PATCH['kb87_033']={s:"真空泵选型看极限真空、抽速与耐水耐化学性；前级泵+罗茨/扩散泵组合可达深真空，化妆品宜选无油或防污染型。",b:[{"h":"一、选型要点","type":"p","content":"极限真空须低于工艺腔压一个数量级；抽速匹配放气量与漏率；接触蒸汽侧需耐水/溶剂，或加冷阱隔离。"},{"h":"二、类型","type":"p","content":"油旋片泵经济但需油雾/返油防护；无油爪泵/螺杆泵更洁净适合化妆品；深真空配罗茨增压。"},{"h":"三、关键判据","type":"ul","content":["极限真空 ≤0.01 mbar；","抽速匹配腔体；","无油优先保洁净。"]},{"h":"四、常见问答","type":"qa","content":[{"q":"油泵能用吗？","a":"能用但须防返油污染产品，化妆品更推无油或加冷阱。"}]}]};
+  PATCH['kb87_034']={s:"搁板平整度与均温直接影响批内一致：不平或温差大→局部超温塌陷、局部残冰；均温 ≤±1℃ 为佳。",b:[{"h":"一、为何重要","type":"p","content":"产品温由板温经传导决定，搁板不平/温差使同批瓶温不同，出现\"干透 vs 残冰\"\"塌陷 vs 完好\"并存。"},{"h":"二、保障","type":"p","content":"高平整度加工、硅油循环均温、多点测温验证；装载时瓶底贴板良好接触。"},{"h":"三、关键判据","type":"ul","content":["板面均温 ≤±1℃；","平整度 ≤0.5mm/m；","空载/满载均温验证。"]},{"h":"四、常见问答","type":"qa","content":[{"q":"批内有的塌陷有的好？","a":"先查搁板均温与装载接触，多半是温度分布问题。"}]}]};
+  PATCH['kb87_035']={s:"硅油循环搁板控温均匀、精度高，电加热搁板响应快但均温难；化妆品量产多用硅油式，小试可用电加热。",b:[{"h":"一、对比","type":"p","content":"硅油式靠循环介质均温，温度场稳、适合大板；电加热式结构简单、升温快，但边角温差大、需补偿。"},{"h":"二、选型","type":"p","content":"量产重视均温与可验证选硅油；研发小设备求灵活可用电加热，但须多点校准。"},{"h":"三、关键判据","type":"ul","content":["硅油控温 ±0.5℃；","电加热需边角补偿；","介质耐温与食品级。"]},{"h":"四、常见问答","type":"qa","content":[{"q":"电加热不行吗？","a":"小试可，量产均温难保障，建议硅油。"}]}]};
+  PATCH['kb87_036']={s:"在线残水监测手段：压力升法、近红外(NIR)、微波谐振、露点法；可实时估残水、缩短终点判定，但仍以卡氏法仲裁。",b:[{"h":"一、方法","type":"p","content":"NIR/拉曼测固相化学态估水；压力升估冰尽；微波测介电估水；均为过程分析(PAT)工具。"},{"h":"二、定位","type":"p","content":"在线法用于过程监控与终点辅助，放行仍靠离线卡氏法，二者互补。"},{"h":"三、关键判据","type":"ul","content":["在线估水趋势；","卡氏法仲裁；","模型需定期标定。"]},{"h":"四、常见问答","type":"qa","content":[{"q":"在线残水能替代卡氏吗？","a":"暂不能作放行仲裁，宜作过程监控。"}]}]};
+  PATCH['kb87_037']={s:"产品温度探针须插入产品中心、贴壁无效；布置多点（中心/边缘/代表瓶）才能真实反映批内温度分布。",b:[{"h":"一、布置原则","type":"p","content":"探针尖应位于液面中部、不触壁不触底；同批取中心与边缘代表瓶，兼顾装载最不利位。"},{"h":"二、校准","type":"p","content":"热电偶/RTD 须校准，引线不影响密封；数据用于终点判据与均温验证。"},{"h":"三、关键判据","type":"ul","content":["探针在产品中段；","中心+边缘代表点；","定期校准。"]},{"h":"四、常见问答","type":"qa","content":[{"q":"贴壁测温准吗？","a":"不准，反映的是壁温而非产品，会误导终点。"}]}]};
+  PATCH['kb87_038']={s:"隔离器（isolator）与无菌灌装：冻干化妆品多在 A 级层流/隔离器内灌装压塞，降低人员污染风险，是洁净生产核心。",b:[{"h":"一、作用","type":"p","content":"隔离器用 RABS/无菌屏障把产品与人员隔开，配 A 级层流保护灌装与压塞，显著降染菌率。"},{"h":"二、要求","type":"p","content":"内部 A 级、背景 B 级；压差梯度、在线粒子监测、表面消毒（VHP）常态化。"},{"h":"三、关键判据","type":"ul","content":["A 级层流保护；","压差梯度维持；","VHP 去污验证。"]},{"h":"四、常见问答","type":"qa","content":[{"q":"普通洁净台够吗？","a":"高风险产品不足，隔离器更稳，尤其无菌宣称品。"}]}]};
+  PATCH['kb87_039']={s:"CIP（在线清洗）/SIP（在线灭菌）：冻干机腔体自动清洗与蒸汽灭菌，是保证批次无交叉污染与合规的关键。",b:[{"h":"一、定义","type":"p","content":"CIP 用喷淋碱/酸/水循环清洗腔体与管路；SIP 用饱和蒸汽 121℃ 灭菌并保压，验证无菌保持。"},{"h":"二、验证","type":"p","content":"须做清洗残留限度、灭菌 F0 值、温度分布验证；记录可追溯。"},{"h":"三、关键判据","type":"ul","content":["SIP F0≥8~15（视风险）；","CIP 残留 ≤ 限度；","喷淋覆盖率验证。"]},{"h":"四、常见问答","type":"qa","content":[{"q":"CIP 代替手工清洗吗？","a":"可大幅替代并更可验证，但仍需定期拆检。"}]}]};
+  PATCH['kb87_040']={s:"冻干机漏率标准：腔体泄漏率须低于限值（如 ≤1×10⁻² mbar·L/s 量级），漏率大则真空不稳、产品回潮污染。",b:[{"h":"一、为何限漏","type":"p","content":"泄漏引入空气与不凝气，升高腔压、带入水分与微粒，破坏干燥与无菌。"},{"h":"二、检测","type":"p","content":"用氦质谱检漏或压力升法定期测漏率；密封件（门封、阀）老化是主因。"},{"h":"三、关键判据","type":"ul","content":["泄漏率 ≤ 厂标/法规；","定期氦检；","门封周期更换。"]},{"h":"四、常见问答","type":"qa","content":[{"q":"轻微漏气影响大吗？","a":"累积会回潮与染菌，须控制在标准内并定期检。"}]}]};
+  PATCH['kb87_041']={s:"液压压塞机构：冻干机内置液压系统在一次干燥后于真空下压塞；压力均匀、定位准是密封完整性的保障。",b:[{"h":"一、机构","type":"p","content":"搁板间液压柱在破空前上顶，把胶塞压入瓶口；行程与压力可控，多柱同步保证整批一致。"},{"h":"二、要点","type":"p","content":"压塞力均匀防跳塞/压偏；位置重复精度影响密封；需与搁板同步无干涉。"},{"h":"三、关键判据","type":"ul","content":["压塞力均匀；","同步误差小；","跳塞率纳入检验。"]},{"h":"四、常见问答","type":"qa","content":[{"q":"压塞不齐会怎样？","a":"密封不良→回潮染菌，属关键缺陷。"}]}]};
+  PATCH['kb87_042']={s:"冷凝器除霜策略：周期性融化冷阱积冰恢复捕集能力；方式有热气/水/电加热，须防交叉污染与停机过长。",b:[{"h":"一、为何除霜","type":"p","content":"冷阱积冰到容量上限捕集饱和，腔压回升干燥变慢，须除霜复位。"},{"h":"二、方式","type":"p","content":"热气旁通化霜快、节能；温水冲洗干净但需排水防污；频次依单批水量定，连续生产排程避开高峰。"},{"h":"三、关键判据","type":"ul","content":["霜厚达限即除；","除霜后干燥验证；","防积水污染。"]},{"h":"四、常见问答","type":"qa","content":[{"q":"除霜频繁影响产能吗？","a":"会，须按水量选大冷阱或排程除霜降本。"}]}]};
+  PATCH['kb87_043']={s:"控制系统与报警：PLC/SCADA 按曲线时序控温压，越限报警与联锁保护设备与产品；是复现与合规基础。",b:[{"h":"一、功能","type":"p","content":"按时序控制冷/真空/加热，采集数据，越限声光报警并可联锁停机/保压，防超温超压。"},{"h":"二、合规","type":"p","content":"需审计追踪、权限分级、电子签名，符合 GMP 数据完整性的 ALCOA 原则。"},{"h":"三、关键判据","type":"ul","content":["报警分级与响应；","审计追踪；","权限管理。"]},{"h":"四、常见问答","type":"qa","content":[{"q":"报警太多烦怎么办？","a":"应分级而非关闭，关键报警必须保留并定义响应流程。"}]}]};
+  PATCH['kb87_044']={s:"小试桌面冻干机：实验室级迷你设备，用于配方筛选与曲线预演；容量小、参数可调，是放大前的必要工具。",b:[{"h":"一、用途","type":"p","content":"做配方冻干可行性、塌陷温度初筛、小样外观与复溶评价，为量产曲线提供起点。"},{"h":"二、局限","type":"p","content":"传热/均温与小试差异大，所得曲线须中试校正，不能直接等同量产。"},{"h":"三、关键判据","type":"ul","content":["装量小(数 mL~数十 mL)；","参数透明可调；","数据可导出。"]},{"h":"四、常见问答","type":"qa","content":[{"q":"桌面机数据能直接放大吗？","a":"只能作参考，放大须中试桥接。"}]}]};
+  PATCH['kb87_045']={s:"验证三大件 DQ/IQ/OQ（设计/安装/运行确认）加 PQ（性能确认）构成冻干机 GMP 验证链，是合规生产前提。",b:[{"h":"一、四确认","type":"p","content":"DQ 审设计符合 URS；IQ 核安装与文件；OQ 验空载性能（均温、漏率、真空）；PQ 用空白/产品批验实际产出。"},{"h":"二、持续","type":"p","content":"投产后定期再验证、变更控制下重验，保证状态持续受控。"},{"h":"三、关键判据","type":"ul","content":["URS→DQ→IQ→OQ→PQ；","空载均温/漏率达标；","变更即重验。"]},{"h":"四、常见问答","type":"qa","content":[{"q":"只做 IQ/OQ 行吗？","a":"不行，PQ 证明实际产能与质量，四者缺一不可。"}]}]};
+  var A=window.knowledgeArticles||[];
+  var n=0;
+  A.forEach(function(a){ if(PATCH[a.id]){ a.summary=PATCH[a.id].s; a.blocks=PATCH[a.id].b; n++; } });
+  window.__KB_PATCH_ARTICLES_B1=n;
 })();
 </script>
 

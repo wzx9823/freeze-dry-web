@@ -39,7 +39,7 @@
       return;
     }
   } catch(e) {}
-  var CACHE_STAMP = '20260831-399';
+  var CACHE_STAMP = '20260902-3991';
   var need = false;
   var href = window.location.href;
   if (href.indexOf(CACHE_STAMP) === -1) {
@@ -1602,7 +1602,7 @@ body.dark ::selection{ background:rgba(34,211,238,.32); color:#e2e8f0; }
   setTimeout(hideLoader, 6000);
 })();
 </script>
-<div class="top-nav"><h1>冻干</h1><div style="display:flex;align-items:center;gap:8px"><div class="user-bar" id="userBar"><div class="user-info" id="loginEntry" onclick="showLoginModal()"><span style="font-size:14px">👤</span><span style="font-size:13px">登录</span></div></div><button class="nav-btn" onclick="toggleDarkMode()" id="darkBtn" title="切换暗色模式">🌙</button><button class="nav-btn" onclick="window.print()" title="打印">🖨️</button><button class="nav-btn" onclick="checkAppUpdate(false)" title="检查更新">🔄</button><button class="nav-btn" onclick="showDiagnosticModal()" id="diagBtn" title="诊断信息" style="background:linear-gradient(135deg,#ff6b6b,#f06292);color:#fff;font-weight:700">🩺</button><span class="ver" title="长按版本号5秒也能打开诊断面板" id="verBadge">Web v3.99</span></div></div>
+<div class="top-nav"><h1>冻干</h1><div style="display:flex;align-items:center;gap:8px"><div class="user-bar" id="userBar"><div class="user-info" id="loginEntry" onclick="showLoginModal()"><span style="font-size:14px">👤</span><span style="font-size:13px">登录</span></div></div><button class="nav-btn" onclick="toggleDarkMode()" id="darkBtn" title="切换暗色模式">🌙</button><button class="nav-btn" onclick="window.print()" title="打印">🖨️</button><button class="nav-btn" onclick="checkAppUpdate(false)" title="检查更新">🔄</button><button class="nav-btn" onclick="showDiagnosticModal()" id="diagBtn" title="诊断信息" style="background:linear-gradient(135deg,#ff6b6b,#f06292);color:#fff;font-weight:700">🩺</button><span class="ver" title="长按版本号5秒也能打开诊断面板" id="verBadge">Web v3.991</span></div></div>
 <div class="tab-bar" id="tabBar">
   <div class="tab-item active" data-page="curve" onclick="switchPage('curve')"><span class="ti">📈</span>曲线生成</div>
   <div class="tab-item" data-page="image" onclick="switchPage('image')"><span class="ti">📸</span>图片分析</div>
@@ -2243,7 +2243,7 @@ body.dark ::selection{ background:rgba(34,211,238,.32); color:#e2e8f0; }
 <script>
 
 // ===== 智能驱动更新：应用自更新 / 版本检查 (v3.48) =====
-const APP_VERSION = '3.99';
+const APP_VERSION = '3.991';
 const APP_BUILD_ID = '20260820-v366-perm-' + (new Date().toISOString().slice(0,10));
 const APP_UPDATE_MANIFEST = './version.json'; // 可改为托管地址（需 CORS 允许跨域读取）
 function verNum(v){ var n = String(v||'').replace(/[^0-9.]/g,'').split('.'); return (parseInt(n[0]||0,10)*100 + parseInt(n[1]||0,10)); }
@@ -11910,7 +11910,13 @@ function recipeSearchText(p) {
 // 模型：单用户多端 last-write-wins 全量快照，以最后保存端为准。
 var LYO_SYNC_CODE = 'lyo.syncCode.v1';
 var LYO_SYNC_META = 'lyo.syncMeta.v1';
-var CLOUD_SYNC_URL = '/.netlify/functions/sync';
+// CloudBase 静态托管：通过"函数路由"把同源 /sync 映射到云函数（免 CORS、免硬编码 URL）。
+// 其他渠道（本地 / GitHub Pages）回退 Netlify 端点（无后端时自动降级为手动备份）。
+var CLOUD_SYNC_URL = (function(){
+  var h = location.hostname;
+  if (h.indexOf('tcloudbase.com') >= 0 || h.indexOf('tcb.cloud.tencent.com') >= 0) return '/sync';
+  return '/.netlify/functions/sync';
+})();
 var __syncTimer = null;
 var __syncBusy = false;
 
@@ -11983,6 +11989,26 @@ async function initCloudSync(){
       if (res.snap.__t > (meta.lastPush || 0)) { setSyncMeta({ lastPush:res.snap.__t, lastPullAt:Date.now() }); setTimeout(function(){ try { location.reload(); } catch(e){} }, 600); }
     }
   } catch(e) {}
+  // CloudBase 同源（*.tcloudbase.com）时开启周期拉取，实现多端近实时互通
+  var __h = location.hostname;
+  if (__h.indexOf('tcloudbase.com') >= 0 || __h.indexOf('tcb.cloud.tencent.com') >= 0) startCloudSyncPolling();
+}
+var __syncPollTimer = null;
+function startCloudSyncPolling(){
+  if (!__canSync() || __syncPollTimer) return;
+  __syncPollTimer = setInterval(function(){
+    if (__syncBusy) return;
+    pullCloudSync(true).then(function(res){
+      if (res && res.ok && res.snap && res.snap.__t) {
+        var meta = getSyncMeta();
+        if (res.snap.__t > (meta.lastPush || 0)) {
+          setSyncMeta({ lastPush: res.snap.__t, lastPullAt: Date.now() });
+          try { updateSyncStatusUI(); } catch(e){}
+          setTimeout(function(){ try { location.reload(); } catch(e){} }, 800);
+        }
+      }
+    }).catch(function(){});
+  }, 25000);
 }
 async function doCreateSync(){
   var code = genSyncCode(); setSyncCodeLocal(code);

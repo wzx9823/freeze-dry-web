@@ -1,0 +1,27 @@
+{
+  "envId": "{{ENV_ID}}",
+  "functionRoot": "cloudbase/functions",
+  "functions": [
+    {
+      "name": "sync",
+      "runtime": "Nodejs18.15",
+      "handler": "index.main",
+      "memorySize": 128,
+      "timeout": 10,
+      "installDependency": true
+    }
+  ],
+  "hosting": {
+    "appId": "",
+    "localPath": ".",
+    "ignore": [
+      ".nojekyll",
+      "DEPLOY.md",
+      "DEPLOY-CLOUDBASE.md",
+      "cloudbaserc.json",
+      "cloudbase",
+      "serve.js",
+      "start.bat"
+    ]
+  }
+}

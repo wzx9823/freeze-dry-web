@@ -1,0 +1,9 @@
+{
+  "name": "sync",
+  "version": "1.0.0",
+  "description": "Freeze-dry-web CloudBase sync backend (E2E encrypted blob store)",
+  "main": "index.js",
+  "dependencies": {
+    "@cloudbase/node-sdk": "^2.8.0"
+  }
+}

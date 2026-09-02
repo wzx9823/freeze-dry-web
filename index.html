@@ -11910,11 +11910,16 @@ function recipeSearchText(p) {
 // 模型：单用户多端 last-write-wins 全量快照，以最后保存端为准。
 var LYO_SYNC_CODE = 'lyo.syncCode.v1';
 var LYO_SYNC_META = 'lyo.syncMeta.v1';
-// CloudBase 静态托管：通过"函数路由"把同源 /sync 映射到云函数（免 CORS、免硬编码 URL）。
-// 其他渠道（本地 / GitHub Pages）回退 Netlify 端点（无后端时自动降级为手动备份）。
+// CloudBase 同步后端：
+//  - 在 CloudBase 静态托管域(*.tcloudbaseapp.com)打开时，函数路由建在 HTTPSERVICE 默认域(*.ap-shanghai.app.tcloudbase.com)，
+//    由当前 host 推导函数绝对地址（跨域，函数已设 CORS:*）。
+//  - 本地 / GitHub Pages 等无 CloudBase 后端时回退 Netlify 端点（不可达则自动降级为手动备份）。
 var CLOUD_SYNC_URL = (function(){
   var h = location.hostname;
-  if (h.indexOf('tcloudbase.com') >= 0 || h.indexOf('tcb.cloud.tencent.com') >= 0) return '/sync';
+  if (h.indexOf('tcloudbaseapp.com') >= 0) {
+    return 'https://' + h.replace('tcloudbaseapp.com', 'ap-shanghai.app.tcloudbase.com') + '/sync';
+  }
+  if (h.indexOf('tcloudbase') >= 0 || h.indexOf('tcb.cloud.tencent.com') >= 0) return '/sync';
   return '/.netlify/functions/sync';
 })();
 var __syncTimer = null;
@@ -11991,7 +11996,7 @@ async function initCloudSync(){
   } catch(e) {}
   // CloudBase 同源（*.tcloudbase.com）时开启周期拉取，实现多端近实时互通
   var __h = location.hostname;
-  if (__h.indexOf('tcloudbase.com') >= 0 || __h.indexOf('tcb.cloud.tencent.com') >= 0) startCloudSyncPolling();
+  if (__h.indexOf('tcloudbase') >= 0 || __h.indexOf('tcb.cloud.tencent.com') >= 0) startCloudSyncPolling();
 }
 var __syncPollTimer = null;
 function startCloudSyncPolling(){

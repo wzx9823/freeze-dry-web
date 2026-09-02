@@ -1,75 +1,61 @@
-// 冻干工艺优化 Web · CloudBase 云同步后端
-// 职责极简：按同步码哈希 k 存/取一段 AES-GCM 密文 blob。
-// 服务端不持有同步码、不解密，仅做"按 key 存取"。端到端加密在客户端完成。
-const cloud = require('@cloudbase/node-sdk');
-cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
-const db = cloud.database();
-const COLL = 'sync_blobs';
+// CloudBase sync 云函数 — 云存储版（node-sdk 2.11.0，app.uploadFile/downloadFile）
+// 仅按 k=sha256(同步码) 存/取 AES-GCM 密文，服务端不解密。
+const tcb = require('@cloudbase/node-sdk');
+const app = tcb.init({ env: tcb.SYMBOL_CURRENT_ENV });
 
-function corsHeaders() {
-  return {
-    'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type'
-  };
+// 本环境静态存储桶（fileID 前缀，跨调用稳定）
+const ENV_ID = 'wzx9823-d3gmk6n9d1e3e671a';
+const BUCKET = '777a-wzx9823-d3gmk6n9d1e3e671a-1471241944';
+const PREFIX = 'cloud://' + ENV_ID + '.' + BUCKET + '/syncblobs/';
+
+const CORS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type,Authorization'
+};
+function ok(statusCode, obj) {
+  return { statusCode, headers: CORS, body: JSON.stringify(obj) };
 }
 
-function parseBody(event) {
-  try {
-    if (typeof event.body === 'string') return JSON.parse(event.body || '{}');
-    if (event.body && typeof event.body === 'object') return event.body;
-  } catch (e) {}
-  return {};
-}
-
-function getQuery(event) {
-  const qs = event.queryString;
-  if (qs && typeof qs === 'object') return qs;
-  if (event.queryStringParameters && typeof event.queryStringParameters === 'object') return event.queryStringParameters;
-  return {};
-}
+function fileIDFor(k) { return PREFIX + k + '.json'; }
+function cloudPathFor(k) { return 'syncblobs/' + k + '.json'; }
 
 exports.main = async (event, context) => {
-  const headers = corsHeaders();
-  const method = (event.httpMethod || event.method || 'GET').toUpperCase();
-
-  // 预检
-  if (method === 'OPTIONS') {
-    return { statusCode: 204, headers: Object.assign({}, headers, { 'Content-Type': 'text/plain' }), body: '' };
-  }
-
   try {
-    if (method === 'POST') {
-      const body = parseBody(event);
-      const k = body.k;
-      const data = body.data;
-      if (!k || data == null) {
-        return { statusCode: 400, headers, body: JSON.stringify({ ok: false, reason: 'missing k/data' }) };
-      }
-      const exist = await db.collection(COLL).doc(k).get();
-      if (exist.data && exist.data.length) {
-        await db.collection(COLL).doc(k).update({ data: { blob: data, updatedAt: Date.now() } });
-      } else {
-        await db.collection(COLL).doc(k).add({ _id: k, blob: data, updatedAt: Date.now() });
-      }
-      return { statusCode: 200, headers, body: JSON.stringify({ ok: true }) };
+    const method = (event.httpMethod ||
+      (event.requestContext && event.requestContext.http && event.requestContext.http.method) ||
+      (event.requestContext && event.requestContext.method) || 'GET').toUpperCase();
+    if (method === 'OPTIONS') return { statusCode: 204, headers: CORS, body: '' };
+
+    if (method === 'POST' || method === 'PUT') {
+      let raw = event.body || event.payload || '';
+      if (raw && typeof raw === 'object') raw = JSON.stringify(raw);
+      let parsed;
+      try { parsed = JSON.parse(raw); } catch (e) { return ok(400, { ok: false, error: 'invalid json body' }); }
+      const k = parsed && parsed.k;
+      const data = parsed && parsed.data;
+      if (!k || typeof data !== 'string') return ok(400, { ok: false, error: 'missing k or data' });
+      await app.uploadFile({ cloudPath: cloudPathFor(k), fileContent: Buffer.from(data, 'utf8') });
+      return ok(200, { ok: true, t: Date.now() });
     }
 
-    // GET ?k=...
-    const q = getQuery(event);
-    const k = q.k || event.k;
-    if (!k) {
-      return { statusCode: 400, headers, body: JSON.stringify({ ok: false, reason: 'missing k' }) };
+    // GET
+    let k = (event.queryStringParameters && event.queryStringParameters.k) || null;
+    if (!k && event.queryString) {
+      const qs = String(event.queryString).startsWith('?') ? event.queryString : ('?' + event.queryString);
+      try { k = new URL(qs, 'http://x').searchParams.get('k'); } catch (e) {}
     }
-    const res = await db.collection(COLL).doc(k).get();
-    const blob = (res.data && res.data.length) ? res.data[0].blob : null;
-    return {
-      statusCode: 200,
-      headers,
-      body: JSON.stringify(blob ? { ok: true, data: blob } : { ok: true })
-    };
+    if (!k) return ok(400, { ok: false, error: 'missing k' });
+
+    try {
+      const dl = await app.downloadFile({ fileID: fileIDFor(k) });
+      const content = dl && dl.fileContent ? dl.fileContent.toString('utf8') : null;
+      return ok(200, { ok: true, data: content, t: Date.now() });
+    } catch (e) {
+      // 文件不存在 → 视为空
+      return ok(200, { ok: true, data: null });
+    }
   } catch (e) {
-    return { statusCode: 500, headers, body: JSON.stringify({ ok: false, reason: String((e && e.message) || e) }) };
+    return ok(500, { ok: false, error: String((e && e.message) || e) });
   }
 };

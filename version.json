@@ -1,6 +1,6 @@
 {
-  "version": "3.991",
+  "version": "3.9911",
   "url": "https://wzx9823.github.io/freeze-dry-web/",
   "date": "2026-09-02",
-  "notes": "新增 CloudBase 实时云同步后端：把同步后端从 Netlify 换成腾讯云 CloudBase（*.tcloudbase.com 静态托管 + 云函数 sync + 函数路由同源 /sync），端到端加密不变（同步码只存本机，云端仅存 AES-GCM 密文）。app 在 CloudBase 域自动启用 /sync 并加 25s 周期拉取，实现手机↔电脑近实时互通；本地 / GitHub Pages 无后端时自动降级为「📦 备份/恢复」手动互通。"
+  "notes": "v3.9911 热修（同步“点了没反应”）：同步后端改为任意来源统一走 CloudBase 函数路由（不再回退不可达的 Netlify）；创建同步码立即显示码 + 8s 超时快速报错，杜绝“点了没反应”。端到端加密不变（同步码只存本机，云端仅存 AES-GCM 密文），手机↔电脑约 25s 自动互通。"
 }

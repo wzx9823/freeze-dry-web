@@ -39,7 +39,7 @@
       return;
     }
   } catch(e) {}
-  var CACHE_STAMP = '20260902-3991';
+  var CACHE_STAMP = '20260902-39911';
   var need = false;
   var href = window.location.href;
   if (href.indexOf(CACHE_STAMP) === -1) {
@@ -1602,7 +1602,7 @@ body.dark ::selection{ background:rgba(34,211,238,.32); color:#e2e8f0; }
   setTimeout(hideLoader, 6000);
 })();
 </script>
-<div class="top-nav"><h1>冻干</h1><div style="display:flex;align-items:center;gap:8px"><div class="user-bar" id="userBar"><div class="user-info" id="loginEntry" onclick="showLoginModal()"><span style="font-size:14px">👤</span><span style="font-size:13px">登录</span></div></div><button class="nav-btn" onclick="toggleDarkMode()" id="darkBtn" title="切换暗色模式">🌙</button><button class="nav-btn" onclick="window.print()" title="打印">🖨️</button><button class="nav-btn" onclick="checkAppUpdate(false)" title="检查更新">🔄</button><button class="nav-btn" onclick="showDiagnosticModal()" id="diagBtn" title="诊断信息" style="background:linear-gradient(135deg,#ff6b6b,#f06292);color:#fff;font-weight:700">🩺</button><span class="ver" title="长按版本号5秒也能打开诊断面板" id="verBadge">Web v3.991</span></div></div>
+<div class="top-nav"><h1>冻干</h1><div style="display:flex;align-items:center;gap:8px"><div class="user-bar" id="userBar"><div class="user-info" id="loginEntry" onclick="showLoginModal()"><span style="font-size:14px">👤</span><span style="font-size:13px">登录</span></div></div><button class="nav-btn" onclick="toggleDarkMode()" id="darkBtn" title="切换暗色模式">🌙</button><button class="nav-btn" onclick="window.print()" title="打印">🖨️</button><button class="nav-btn" onclick="checkAppUpdate(false)" title="检查更新">🔄</button><button class="nav-btn" onclick="showDiagnosticModal()" id="diagBtn" title="诊断信息" style="background:linear-gradient(135deg,#ff6b6b,#f06292);color:#fff;font-weight:700">🩺</button><span class="ver" title="长按版本号5秒也能打开诊断面板" id="verBadge">Web v3.9911</span></div></div>
 <div class="tab-bar" id="tabBar">
   <div class="tab-item active" data-page="curve" onclick="switchPage('curve')"><span class="ti">📈</span>曲线生成</div>
   <div class="tab-item" data-page="image" onclick="switchPage('image')"><span class="ti">📸</span>图片分析</div>
@@ -2243,7 +2243,7 @@ body.dark ::selection{ background:rgba(34,211,238,.32); color:#e2e8f0; }
 <script>
 
 // ===== 智能驱动更新：应用自更新 / 版本检查 (v3.48) =====
-const APP_VERSION = '3.991';
+const APP_VERSION = '3.9911';
 const APP_BUILD_ID = '20260820-v366-perm-' + (new Date().toISOString().slice(0,10));
 const APP_UPDATE_MANIFEST = './version.json'; // 可改为托管地址（需 CORS 允许跨域读取）
 function verNum(v){ var n = String(v||'').replace(/[^0-9.]/g,'').split('.'); return (parseInt(n[0]||0,10)*100 + parseInt(n[1]||0,10)); }
@@ -11919,8 +11919,9 @@ var CLOUD_SYNC_URL = (function(){
   if (h.indexOf('tcloudbaseapp.com') >= 0) {
     return 'https://' + h.replace('tcloudbaseapp.com', 'ap-shanghai.app.tcloudbase.com') + '/sync';
   }
-  if (h.indexOf('tcloudbase') >= 0 || h.indexOf('tcb.cloud.tencent.com') >= 0) return '/sync';
-  return '/.netlify/functions/sync';
+  // 任意来源（GitHub Pages / 本地 / 其他域名）统一走 CloudBase 函数路由：
+  // netlify 在你的网络不可达，CloudBase 函数路由跨域 CORS* 已开，可在任意页面复用同一同步后端。
+  return 'https://wzx9823-d3gmk6n9d1e3e671a-1471241944.ap-shanghai.app.tcloudbase.com/sync';
 })();
 var __syncTimer = null;
 var __syncBusy = false;
@@ -11943,6 +11944,15 @@ function __syncKeys(){ return ['lyo.users.v1','lyo.currentUser.v1','lyo.roles.v1
 function __buildSnapshot(){ var o = {}; __syncKeys().forEach(function(k){ try { var v=localStorage.getItem(k); if (v!=null) o[k]=v; } catch(e){} }); o.__t = Date.now(); o.__v = (window.CACHE_STAMP||''); return o; }
 function genSyncCode(){ var cs='ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; var a=new Uint32Array(20); crypto.getRandomValues(a); var s=''; for (var i=0;i<20;i++){ s+=cs[a[i]%cs.length]; if (i%4===3 && i<19) s+='-'; } return s; }
 function __canSync(){ return !!(getSyncCode() && window.crypto && window.crypto.subtle); }
+// 带超时的 fetch：你的网络对不可达域名是“黑洞式”拦截（请求不回包），原生 fetch 会一直挂着不报错。
+// 这里 8s 超时 abort，让同步失败快速、可见，杜绝“点了没反应”。
+function __syncFetch(url, opts, ms){
+  ms = ms || 8000;
+  var ctrl = ('AbortController' in window) ? new AbortController() : null;
+  if (ctrl) { opts = opts || {}; opts.signal = ctrl.signal; }
+  var tid = ctrl ? setTimeout(function(){ try { ctrl.abort(); } catch(e){} }, ms) : null;
+  return fetch(url, opts).then(function(r){ if (tid) clearTimeout(tid); return r; }, function(err){ if (tid) clearTimeout(tid); throw err; });
+}
 async function pushCloudSync(){
   if (!__canSync()) return { ok:false, reason:'disabled' };
   if (__syncBusy) return { ok:false, reason:'busy' };
@@ -11954,18 +11964,18 @@ async function pushCloudSync(){
     var iv = crypto.getRandomValues(new Uint8Array(12));
     var ct = await crypto.subtle.encrypt({ name:'AES-GCM', iv:iv }, key, __str2buf(JSON.stringify(snap)));
     var data = __buf2b64(iv) + ':' + __buf2b64(ct);
-    var r = await fetch(CLOUD_SYNC_URL, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ k:k, data:data }) });
+    var r = await __syncFetch(CLOUD_SYNC_URL, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ k:k, data:data }) });
     var j = await r.json().catch(function(){ return null; });
     if (j && j.ok) { setSyncMeta({ lastPush:snap.__t, lastPushAt:Date.now() }); updateSyncStatusUI(); return { ok:true }; }
     return { ok:false, reason:'server', detail:(j&&j.reason)||'' };
-  } catch(e) { return { ok:false, reason:String(e&&e.message||e) }; }
+  } catch(e) { var pr = (e && e.name === 'AbortError') ? 'timeout(8s)' : String(e&&e.message||e); return { ok:false, reason:pr }; }
   finally { __syncBusy = false; }
 }
 async function pullCloudSync(apply){
   if (!__canSync()) return { ok:false, reason:'disabled' };
   try {
     var code = getSyncCode(); var k = await __sha256hex(code);
-    var r = await fetch(CLOUD_SYNC_URL + '?k=' + encodeURIComponent(k), { method:'GET' });
+    var r = await __syncFetch(CLOUD_SYNC_URL + '?k=' + encodeURIComponent(k), { method:'GET' });
     var j = await r.json().catch(function(){ return null; });
     if (!j || !j.ok) return { ok:false, reason:'server', detail:(j&&j.reason)||'' };
     if (!j.data) return { ok:true, empty:true };
@@ -11978,7 +11988,7 @@ async function pullCloudSync(apply){
       setSyncMeta({ lastPull:snap.__t, lastPullAt:Date.now(), lastPush:snap.__t });
     }
     return { ok:true, snap:snap };
-  } catch(e) { return { ok:false, reason:String(e&&e.message||e) }; }
+  } catch(e) { var pr = (e && e.name === 'AbortError') ? 'timeout(8s)' : String(e&&e.message||e); return { ok:false, reason:pr }; }
 }
 function scheduleCloudSync(){
   if (!__canSync()) return;
@@ -12017,9 +12027,12 @@ function startCloudSyncPolling(){
 }
 async function doCreateSync(){
   var code = genSyncCode(); setSyncCodeLocal(code);
+  showSyncCodeModal(code);            // 立即显示码（本地生成，不依赖网络），杜绝“点了没反应”
+  updateSyncStatusUI();
+  showToast('☁️ 已生成同步码，正在上传当前数据到云端…', 2500, 'info');
   var res = await pushCloudSync();
-  if (res.ok) { showSyncCodeModal(code); updateSyncStatusUI(); showToast('☁️ 已创建同步码并上传当前数据', 3500, 'success'); }
-  else { showToast('创建失败：' + (res.reason||''), 4000, 'error'); }
+  if (res.ok) { showToast('☁️ 创建成功，已上传到云端', 3500, 'success'); updateSyncStatusUI(); }
+  else { showToast('同步码已生成，但上传失败：' + (res.reason||'') + '（请确认网络可访问 CloudBase，或用「📦备份/恢复」离线互通）', 5200, 'warn'); }
 }
 function doConnectSync(){
   openPromptModal('☁️ 连接同步码', '输入另一台设备显示的同步码，两端数据即自动互通。', [{ id:'code', label:'同步码', type:'text', placeholder:'如 ABCD-EFGH-IJKL-MNOP', maxlength:40, required:true }], function(){

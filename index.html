@@ -39,7 +39,7 @@
       return;
     }
   } catch(e) {}
-  var CACHE_STAMP = '20260902-39970';
+  var CACHE_STAMP = '20260902-39981';
   var need = false;
   var href = window.location.href;
   if (href.indexOf(CACHE_STAMP) === -1) {
@@ -596,6 +596,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Micr
 .card:hover{box-shadow:var(--shadow-lg);transform:translateY(-3px);border-color:rgba(34,211,238,.5)}
 .card-title{font-size:16px;font-weight:800;margin-bottom:14px;display:flex;align-items:center;gap:9px;letter-spacing:.3px;flex-wrap:nowrap}
 .card-title>span:first-child{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;background:var(--grad-primary);border-radius:10px;font-size:15px;box-shadow:0 4px 10px rgba(8,145,178,.28);flex:none}
+/* 主结果卡（曲线图）视觉强化 + 结果区次级明细区 */
+.card-primary{ position:relative; box-shadow:var(--shadow-lg); }
+.card-primary::before{ content:""; position:absolute; left:18px; right:18px; top:0; height:3px; border-radius:0 0 4px 4px; background:var(--grad-brand); }
+.card-primary:hover{ box-shadow:var(--shadow-lg),0 0 0 1px rgba(6,182,212,.18); }
+.stage-grid{ background:var(--c-bg-glass); border-radius:var(--radius-sm); padding:14px; margin-top:4px; border:1px solid var(--c-border-light); }
 .ch-header>span:first-child{width:auto;height:auto;background:transparent;box-shadow:none;border-radius:0;font-size:inherit;color:inherit}
 #totalTime{background:var(--grad-primary);-webkit-background-clip:text;background-clip:text;color:transparent;font-weight:800}
 .fg{margin-bottom:12px}
@@ -948,6 +953,8 @@ body.dark .tab-sep{background:linear-gradient(180deg,transparent,#334155,transpa
 body.dark .tab-item:hover{background:#334155}
 body.dark .tab-item.active{color:#062a33;background:linear-gradient(135deg,#22d3ee,#0891b2);box-shadow:0 6px 16px rgba(8,145,178,.35)}
 body.dark .card{background:rgba(30,41,59,.72);backdrop-filter:blur(var(--glass-blur));-webkit-backdrop-filter:blur(var(--glass-blur));box-shadow:0 4px 16px rgba(0,0,0,.3);border-color:rgba(148,163,184,.2)}
+body.dark .card-primary{ box-shadow:0 24px 60px rgba(0,0,0,.5); }
+body.dark .stage-grid{ background:rgba(255,255,255,.04); border-color:rgba(148,163,184,.14); }
 body.dark .card:hover{box-shadow:0 16px 44px rgba(0,0,0,.5);transform:translateY(-3px);border-color:rgba(34,211,238,.45)}
 body.dark select,body.dark input[type=number],body.dark input[type=text]{background:#334155;border-color:#475569;color:#e2e8f0}
 body.dark .mode-tabs{background:#0f172a}
@@ -1630,7 +1637,7 @@ body.dark #page-recipes .cat-filter, body.dark #page-knowledge .cat-filter{ back
 
 /* === UI-CONSISTENCY v3.93 (整体一致性收口 · 加性层) === */
 /* 1) 语义背景/状态色 token 暗色重定义：--c-bg-soft 等多页复用，暗色下须收口，避免浅色块刺眼 */
-body.dark{ --c-bg-soft:rgba(255,255,255,.06); --c-success-bg:rgba(16,185,129,.16); --c-success-border:rgba(16,185,129,.40); --c-warn-bg:rgba(217,119,6,.18); --c-warn-border:rgba(217,119,6,.42); --c-danger-bg:rgba(220,38,38,.18); --c-danger-border:rgba(220,38,38,.42); --c-info-bg:rgba(14,165,233,.16); }
+body.dark{ --c-bg:#0a0f1e; --c-bg-soft:rgba(255,255,255,.06); --c-card:#1e293b; --c-card-glass:rgba(30,41,59,.72); --c-bg-glass:rgba(15,23,42,.5); --c-text:#e2e8f0; --c-text-light:#94a3b8; --c-border:#334155; --c-border-light:#1e293b; --c-primary:#22d3ee; --c-primary-light:#67e8f9; --c-primary-dark:#0891b2; --c-success-bg:rgba(16,185,129,.16); --c-success-border:rgba(16,185,129,.40); --c-warn-bg:rgba(217,119,6,.18); --c-warn-border:rgba(217,119,6,.42); --c-danger-bg:rgba(220,38,38,.18); --c-danger-border:rgba(220,38,38,.42); --c-info-bg:rgba(14,165,233,.16); }
 /* 2) 统一小标签/徽章基础排版（抵消各处内联 font-size/字重不一致） */
 .chip,.badge,.tag,.pill,.phase-chip{ font-size:var(--fs-xs); font-weight:600; line-height:1.45; }
 /* 3) 统一卡片内分组小标题强调色（散落游离深青/深灰统一到主色深阶） */
@@ -1851,7 +1858,7 @@ function toggleMobileSearch(){
 }
 function mobileSearchInput(v){ if (typeof filterTabs === 'function') filterTabs(v); }
 </script>
-<div class="top-nav"><h1>冻干</h1><div style="display:flex;align-items:center;gap:8px"><div class="user-bar" id="userBar"><div class="user-info" id="loginEntry" onclick="showLoginModal()"><span style="font-size:14px">👤</span><span style="font-size:13px">登录</span></div></div><button class="nav-btn nav-search-btn" onclick="toggleMobileSearch()" title="搜索页面" aria-label="搜索页面">🔍</button><button class="nav-btn" onclick="toggleDarkMode()" id="darkBtn" title="切换暗色模式">🌙</button><button class="nav-btn" onclick="window.print()" title="打印">🖨️</button><button class="nav-btn" onclick="checkAppUpdate(false)" title="检查更新">🔄</button><button class="nav-btn" onclick="showDiagnosticModal()" id="diagBtn" title="诊断信息" style="background:linear-gradient(135deg,#ff6b6b,#f06292);color:#fff;font-weight:700">🩺</button><span class="ver" title="长按版本号5秒也能打开诊断面板" id="verBadge">Web v3.997</span></div></div>
+<div class="top-nav"><h1>冻干</h1><div style="display:flex;align-items:center;gap:8px"><div class="user-bar" id="userBar"><div class="user-info" id="loginEntry" onclick="showLoginModal()"><span style="font-size:14px">👤</span><span style="font-size:13px">登录</span></div></div><button class="nav-btn nav-search-btn" onclick="toggleMobileSearch()" title="搜索页面" aria-label="搜索页面">🔍</button><button class="nav-btn" onclick="toggleDarkMode()" id="darkBtn" title="切换暗色模式">🌙</button><button class="nav-btn" onclick="window.print()" title="打印">🖨️</button><button class="nav-btn" onclick="checkAppUpdate(false)" title="检查更新">🔄</button><button class="nav-btn" onclick="showDiagnosticModal()" id="diagBtn" title="诊断信息" style="background:linear-gradient(135deg,#ff6b6b,#f06292);color:#fff;font-weight:700">🩺</button><span class="ver" title="长按版本号5秒也能打开诊断面板" id="verBadge">Web v3.998</span></div></div>
 <div class="sb-mobile-search" id="mobilePageSearch">
   <input class="page-search" placeholder="🔍 搜索页面…" oninput="mobileSearchInput(this.value)" aria-label="搜索页面">
 </div>
@@ -1928,8 +1935,8 @@ function mobileSearchInput(v){ if (typeof filterTabs === 'function') filterTabs(
 <div id="robBox" style="display:none;margin-top:10px"></div>
 </div></div>
 <div class="card" id="thermalPanel" style="display:none"><div class="card-title"><span>🌡</span>热力学参数面板</div><div class="thermal-grid" id="thermalGrid"></div><ul class="sug-list" id="thermalSuggestions"></ul></div>
-<div class="card" id="chartCard" style="display:none"><div class="card-title"><span>📈</span>冻干曲线图 <span style="font-size:12px;color:var(--c-text-light);font-weight:400;margin-left:auto">悬停看数值 · 点击曲线任意位置固定读取温度/真空</span><button class="btn btn-s btn-sm" style="margin-left:10px" onclick="if(state&&state.currentCurve){drawCurveCanvas(document.getElementById('curveChart'),state.currentCurve);showToast('Canvas 已重绘');}else showToast('请先生成曲线')">🖼 Canvas 重绘</button></div><div class="canvas-wrap"><canvas id="curveChart" width="840" height="320"></canvas><div id="curveTip" class="curve-tip"></div><div id="curvePinTip" class="curve-tip pin-tip"></div></div></div>
-<div class="card" id="resultsCard" style="display:none"><div class="card-title"><span>⚙️</span>工艺参数</div><div class="disclaimer-banner">⚠️ 本工艺曲线由所选活性物与保护剂的热力学参数（Tg'/Te/Tc/最大耐受温度）推导，为<strong>理论优选范围</strong>。实际批量生产前须经<strong>小试 → 中试</strong>验证（含产品温度探头实测、塌陷/复水性检测），并按设备能力微调。请勿直接照搬用于生产。</div><div class="key-stats" id="keyStatsBar"></div><div class="stage-grid" id="stageGrid"></div><div style="text-align:center;margin:12px 0"><span style="font-size:13px;color:var(--c-text-light)">总周期</span> <span style="font-size:24px;font-weight:700;color:var(--c-primary)" id="totalTime"></span> <span style="font-size:13px;color:var(--c-text-light)">小时</span></div>
+<div class="card card-primary" id="chartCard" style="display:none"><div class="card-title"><span>📈</span>冻干曲线图 <span style="font-size:12px;color:var(--c-text-light);font-weight:400;margin-left:auto">悬停看数值 · 点击曲线任意位置固定读取温度/真空</span><button class="btn btn-s btn-sm" style="margin-left:10px" onclick="if(state&&state.currentCurve){drawCurveCanvas(document.getElementById('curveChart'),state.currentCurve);showToast('Canvas 已重绘');}else showToast('请先生成曲线')">🖼 Canvas 重绘</button></div><div class="canvas-wrap"><canvas id="curveChart" width="840" height="320"></canvas><div id="curveTip" class="curve-tip"></div><div id="curvePinTip" class="curve-tip pin-tip"></div></div></div>
+<div class="card" id="resultsCard" style="display:none"><div class="card-title"><span>⚙️</span>工艺参数</div><div class="disclaimer-banner">⚠️ 本工艺曲线由所选活性物与保护剂的热力学参数（Tg'/Te/Tc/最大耐受温度）推导，为<strong>理论优选范围</strong>。实际批量生产前须经<strong>小试 → 中试</strong>验证（含产品温度探头实测、塌陷/复水性检测），并按设备能力微调。请勿直接照搬用于生产。</div><div class="key-stats" id="keyStatsBar"></div><div class="stage-grid" id="stageGrid"></div>
 <div id="paramInterp" style="margin-top:14px"></div>
 <div class="ui-sec"><div class="ui-sec-title">⚡ 快速微调<span class="sub">一键调整关键参数并即时重算</span></div><div class="qa-grid" id="quickAdjustGrid"></div></div>
 <div class="ui-sec" id="notesArea"></div>
@@ -2586,7 +2593,7 @@ function mobileSearchInput(v){ if (typeof filterTabs === 'function') filterTabs(
 <script>
 
 // ===== 智能驱动更新：应用自更新 / 版本检查 (v3.48) =====
-const APP_VERSION = '3.997';
+const APP_VERSION = '3.998';
 const APP_BUILD_ID = '20260820-v366-perm-' + (new Date().toISOString().slice(0,10));
 const APP_UPDATE_MANIFEST = './version.json'; // 可改为托管地址（需 CORS 允许跨域读取）
 function verNum(v){ var n = String(v||'').replace(/[^0-9.]/g,'').split('.'); return (parseInt(n[0]||0,10)*100 + parseInt(n[1]||0,10)); }
@@ -11851,12 +11858,24 @@ function initOptParam() {
 function loadDarkMode() {
   try {
     var v = localStorage.getItem('freezeDryAI_dark');
-    if (v === 'dark' || v === '1') document.documentElement.classList.add('dark');
+    if (v === 'dark' || v === '1') {
+      document.documentElement.classList.add('dark');
+      if (document.body) document.body.classList.add('dark');
+      var db = document.getElementById('darkBtn'); if (db) db.textContent = '☀️';
+    }
   } catch(e) {}
 }
 function toggleDarkMode() {
   var dark = document.documentElement.classList.toggle('dark');
+  if (document.body) document.body.classList.toggle('dark', dark);
   try { localStorage.setItem('freezeDryAI_dark', dark ? 'dark' : 'light'); } catch(e) {}
+  var b = document.getElementById('darkBtn'); if (b) b.textContent = dark ? '☀️' : '🌙';
+  // 切换后重绘已生成的曲线，使 Canvas 颜色适配暗色
+  try {
+    if (state && state.currentCurve && typeof drawCurveCanvas === 'function') {
+      drawCurveCanvas(document.getElementById('curveChart'), state.currentCurve);
+    }
+  } catch(e) {}
 }
 
 // ---- 曲线悬停/打点交互（配套 drawChart 的 hoverT/pinT） ----
@@ -14437,7 +14456,6 @@ function renderResults(curve) {
     + '<div class="phase-list">' + s.secondary.phases.map(function (p, i) { return '<span class="phase-chip">S' + (i + 1) + ': ' + p.shelfTemp + '°C / ' + p.vacuum + ' mbar × ' + p.hold + 'h</span>'; }).join('') + '</div></div>'
     + '<div class="stage-detail" id="sd-sec" onclick="event.stopPropagation()">' + stageDetailHtml(curve, 'sec') + '</div></div>';
   document.getElementById('stageGrid').innerHTML = html;
-  document.getElementById('totalTime').textContent = curve.totalTime;
   var ksEl = document.getElementById('keyStatsBar');
   if (ksEl) {
     var ks = [

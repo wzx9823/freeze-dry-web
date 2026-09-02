@@ -39,7 +39,7 @@
       return;
     }
   } catch(e) {}
-  var CACHE_STAMP = '20260902-39911';
+  var CACHE_STAMP = '20260902-39960';
   var need = false;
   var href = window.location.href;
   if (href.indexOf(CACHE_STAMP) === -1) {
@@ -242,6 +242,67 @@ function applyDefectToCurve() {
   if (typeof switchPage === 'function') switchPage('curve');
   if (typeof doGenerate === 'function') doGenerate();
   showToast('已应用修正方案到曲线生成器');
+}
+
+// 握手键联动：从「冻干工艺工作台」优化器传入推荐工艺（URL 带 #handoff=1 且本地有 wb_lyo_handoff_v1）
+function applyHandoffToCurve() {
+  var raw; try { raw = localStorage.getItem('wb_lyo_handoff_v1'); } catch (e) { return; }
+  if (!raw) return;
+  var h; try { h = JSON.parse(raw); } catch (e) { return; }
+  var g = function (id) { return document.getElementById(id); };
+  // 装量 / 容器映射
+  if (h.vol != null && g('fillVolume')) { g('fillVolume').value = h.vol; }
+  if (h.load && g('containerType')) { g('containerType').value = (h.load === 'tray') ? 'tray' : 'vial_5ml'; }
+  // Tc/Te 通过手动覆盖通道灌入（作为工艺约束，优先于活性物查表值）
+  if ((h.tc != null || h.te != null) && g('overrideEnabled')) {
+    g('overrideEnabled').checked = true;
+    if (typeof toggleOverride === 'function') toggleOverride();
+    if (h.tc != null && g('manualTc')) g('manualTc').value = h.tc;
+    if (h.te != null && g('manualTe')) g('manualTe').value = h.te;
+  }
+  // 活性物（可选）：匹配则选中并触发热力学刷新（handoff 字段名为 active）
+  var at = g('activeType');
+  var atSel = h.active || h.activeType;
+  if (atSel && at) {
+    var ok = false;
+    for (var i = 0; i < at.options.length; i++) { if (at.options[i].value === atSel) { ok = true; break; } }
+    if (ok) { at.value = atSel; if (typeof updateThermal === 'function') updateThermal(); }
+  }
+  // 推荐卡（可见反馈）
+  if (at) {
+    var card = at.closest('.card');
+    if (card) {
+      var body = card.querySelector('.ch-body');
+      var hc = g('handoffCard');
+      if (!hc) { hc = document.createElement('div'); hc.id = 'handoffCard'; hc.className = 'handoff-card'; if (body) body.insertBefore(hc, body.firstChild); }
+      if (hc) {
+        var tp = (h.tpStar != null) ? h.tpStar + '℃' : '—';
+        var pc = (h.pc != null) ? h.pc + ' mbar' : '—';
+        var t1 = (h.tPriH != null) ? h.tPriH + ' h' : '—';
+        var tc = (h.tc != null) ? h.tc + '℃' : '—';
+        var te = (h.te != null) ? h.te + '℃' : '—';
+        var vol = (h.vol != null) ? h.vol : '—';
+        var area = (h.area != null) ? h.area : '—';
+        hc.innerHTML = '<div class="hc-title">📥 来自「冻干工艺工作台」优化器推荐</div>' +
+          '<div class="hc-grid">' +
+          '<div><span>推荐制品温度 Tp*</span><b>' + tp + '</b></div>' +
+          '<div><span>推荐腔体压力 Pc</span><b>' + pc + '</b></div>' +
+          '<div><span>估算一干时长</span><b>' + t1 + '</b></div>' +
+          '<div><span>塌陷温度 Tc</span><b>' + tc + '</b></div>' +
+          '<div><span>共熔点 Te</span><b>' + te + '</b></div>' +
+          '<div><span>装量 / 面积</span><b>' + vol + 'mL / ' + area + 'cm²</b></div>' +
+          '</div>' +
+          (h.activeType ? '' : '<div class="hc-tip">请选择活性物后点「生成冻干曲线」（Tc/Te 已作为手动覆盖约束载入）</div>');
+      }
+    }
+  }
+  if (typeof switchPage === 'function') switchPage('curve');
+  if (atSel) {
+    if (typeof doGenerate === 'function') doGenerate();
+    if (typeof showToast === 'function') showToast('已载入工作台推荐并自动生成曲线');
+  } else {
+    if (typeof showToast === 'function') showToast('已载入工作台推荐参数，请选择活性物后生成');
+  }
 }
 
 function copyDefectPlan() {
@@ -1582,7 +1643,143 @@ body.dark{ --c-bg-soft:rgba(255,255,255,.06); --c-success-bg:rgba(16,185,129,.16
 /* 7) 暗色下文本选区对比收口 */
 body.dark ::selection{ background:rgba(34,211,238,.32); color:#e2e8f0; }
 /* === /UI-CONSISTENCY v3.93 === */
+.handoff-card{ background:linear-gradient(180deg, rgba(6,182,212,.10), rgba(255,255,255,.92)); border:1px solid #9fe3ef; border-radius:14px; padding:12px 14px; margin-bottom:12px; }
+.handoff-card .hc-title{ font-weight:700; color:#0b7285; margin-bottom:8px; font-size:14px; }
+.handoff-card .hc-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px 14px; }
+.handoff-card .hc-grid>div{ display:flex; flex-direction:column; font-size:12px; color:#52606d; }
+.handoff-card .hc-grid b{ font-size:14px; color:#0b3a4a; margin-top:2px; }
+.handoff-card .hc-tip{ margin-top:8px; font-size:12px; color:#0b7285; background:rgba(6,182,212,.12); padding:6px 10px; border-radius:8px; }
+body.dark .handoff-card{ background:linear-gradient(180deg, rgba(6,182,212,.14), rgba(30,41,59,.5)); border-color:#155e75; }
+body.dark .handoff-card .hc-grid b{ color:#cffafe; }
+body.dark .handoff-card .hc-title{ color:#67e8f9; }
+@media(max-width:768px){ .handoff-card .hc-grid{ grid-template-columns:repeat(2,1fr); } }
 
+/* === UI-SIDEBAR v3.994 (左侧分组侧边栏外壳 · 加性层) === */
+:root{ --sidebar-w:248px; --topnav-h:64px; }
+
+/* 侧边栏容器：桌面端固定左侧，垂直分组导航；保留 .tab-bar/#tabBar 钩子，JS 零改动 */
+.tab-bar.sidebar{
+  position:fixed; left:0; top:var(--topnav-h); bottom:0;
+  width:var(--sidebar-w);
+  display:flex; flex-direction:column;
+  background:var(--c-card,#fff);
+  border-right:1px solid var(--c-border,#e6e9ee);
+  border-radius:0; box-shadow:none;
+  padding:14px 12px; gap:8px; overflow:hidden; z-index:90;
+}
+body{ padding-left:var(--sidebar-w); padding-top:var(--topnav-h); }
+.top-nav{ position:fixed; top:0; left:0; right:0; z-index:100; border-radius:0; }
+.mc{ margin:0 auto; max-width:1040px; }
+
+/* 侧边栏品牌 + 搜索 */
+.sb-brand{ display:flex; align-items:center; gap:8px; font-weight:800; font-size:15px; color:var(--c-text,#101826); padding:2px 6px 8px; }
+.sb-logo{ font-size:18px; }
+.sb-search .page-search{ width:100%; border:1px solid var(--c-border,#e6e9ee); background:var(--c-bg,#f5f7fa); }
+.sb-scroll{ flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:14px; padding-right:2px; }
+.sb-scroll::-webkit-scrollbar{ width:6px; }
+
+/* 分组与导航项 */
+.tab-group{ display:flex; flex-direction:column; gap:2px; }
+.tab-group-title{ font-size:11px; font-weight:700; letter-spacing:.08em; color:var(--c-text-3,#8a94a3); text-transform:uppercase; padding:0 10px 6px; }
+.tab-item{ display:flex; align-items:center; gap:10px; padding:9px 12px; border-radius:10px; font-weight:600; color:var(--c-text-2,#5b6675); cursor:pointer; transition:background .15s,color .15s; white-space:nowrap; }
+.tab-item .ti{ font-size:16px; flex:0 0 auto; }
+.tab-item .tl{ flex:1; }
+.tab-item:hover{ background:var(--c-bg-soft,rgba(15,23,42,.05)); color:var(--c-text,#101826); }
+.tab-item.active{ background:rgba(6,182,212,.12); color:var(--c-primary,#0e9aae); box-shadow:inset 3px 0 0 var(--c-primary,#0e9aae); }
+
+/* 暗色兼容 */
+body.dark .tab-bar.sidebar{ background:var(--c-card,#0f172a); border-right-color:rgba(148,163,184,.14); }
+body.dark .tab-item:hover{ background:rgba(255,255,255,.06); }
+body.dark .tab-item.active{ background:rgba(6,182,212,.18); }
+
+/* 响应式：≤980px 收起侧栏 → 底部导航 */
+@media (max-width:980px){
+  :root{ --sidebar-w:0px; }
+  body{ padding-left:0; padding-top:var(--topnav-h); }
+  .tab-bar.sidebar{
+    position:fixed; left:0; right:0; bottom:0; top:auto;
+    width:auto; flex-direction:row; align-items:center;
+    overflow-x:auto; overflow-y:hidden;
+    background:var(--c-card,#fff); border-right:none; border-top:1px solid var(--c-border,#e6e9ee);
+    border-radius:14px 14px 0 0; padding:6px 8px; gap:4px; z-index:200;
+    box-shadow:0 -6px 22px rgba(15,23,42,.12);
+  }
+  .sb-brand{ display:none; }
+  .sb-search{ display:none; }
+  .sb-scroll{ flex-direction:row; gap:2px; overflow-x:auto; padding-right:0; }
+  .tab-group{ flex-direction:row; gap:2px; }
+  .tab-group-title{ display:none; }
+  .tab-item{ flex-direction:column; gap:2px; padding:6px 10px; font-size:11px; white-space:nowrap; border-radius:10px; }
+  .tab-item .tl{ font-size:11px; }
+  .tab-item.active{ box-shadow:none; background:rgba(6,182,212,.14); }
+  .mc{ padding-bottom:76px; max-width:100%; }
+  .ai-fab{ bottom:74px; } .back-top{ bottom:78px; } .toast{ bottom:80px; }
+}
+/* 极窄屏：仅图标 */
+@media (max-width:640px){
+  .tab-item .tl{ display:none; }
+  .tab-item{ padding:8px; }
+  .tab-item .ti{ font-size:18px; }
+}
+/* === /UI-SIDEBAR v3.994 === */
+
+/* === UI-FIX v3.995 (布局健壮性补丁 · 加性层) ===
+   ① 头栏高度：由 JS 实测写入 --topnav-h（html 内联样式，优先级最高），此处仅为 JS 失效时的断点兜底
+   ② 页面内吸顶元素改为跟随 --topnav-h，消除固定 64px 导致的错位
+   ③ iOS 全面屏安全区：底部导航 / 内容留白 / 悬浮按钮统一补偿
+   ④ 打印：撤销固定留白与定位，避免内容左偏 248px、顶部空白 64px
+*/
+@media (max-width:768px){ :root{ --topnav-h:56px; } }
+@media (max-width:480px){ :root{ --topnav-h:52px; } }
+
+#page-recipes .cat-filter, #page-knowledge .cat-filter{ top:var(--topnav-h,64px); }
+.course-nav{ top:calc(var(--topnav-h,64px) + 10px); }
+
+@supports (padding-bottom:env(safe-area-inset-bottom)){
+  @media (max-width:980px){
+    .tab-bar.sidebar{ padding-bottom:calc(6px + env(safe-area-inset-bottom)); }
+    .mc{ padding-bottom:calc(76px + env(safe-area-inset-bottom)); }
+    .ai-fab{ bottom:calc(74px + env(safe-area-inset-bottom)); }
+    .back-top{ bottom:calc(78px + env(safe-area-inset-bottom)); }
+    .toast{ bottom:calc(80px + env(safe-area-inset-bottom)); }
+  }
+}
+
+@media print{
+  body{ padding-left:0!important; padding-top:0!important; }
+  .tab-bar.sidebar{ display:none!important; }
+  .sb-mobile-search{ display:none!important; }
+  .top-nav{ position:static!important; }
+}
+
+/* 移动端页面搜索：≤980px 时侧栏收起为底部导航，搜索入口移至头栏按钮 + 头栏下滑出条 */
+.sb-mobile-search{ display:none; }
+body.dark .sb-mobile-search{ background:var(--c-card,#0f172a); border-bottom-color:rgba(148,163,184,.14); }
+@media (max-width:980px){
+  .sb-mobile-search{
+    position:fixed; left:0; right:0; top:var(--topnav-h,64px); z-index:150;
+    padding:10px 12px; background:var(--c-card,#fff);
+    border-bottom:1px solid var(--c-border,#e6e9ee);
+    box-shadow:0 8px 20px rgba(15,23,42,.10);
+  }
+  .sb-mobile-search.open{ display:block; }
+  .sb-mobile-search .page-search{ width:100%; margin:0; }
+  .nav-search-btn{ display:inline-flex!important; }
+}
+.page-head{ display:flex; align-items:flex-end; justify-content:space-between; gap:12px; flex-wrap:wrap; grid-column:1 / -1; margin:2px 0 14px; padding-bottom:12px; border-bottom:1px solid var(--c-border,#e6e9ee); }
+.page-head h1{ margin:0; font-size:22px; line-height:1.2; letter-spacing:.3px; }
+.page-head .ph-sub{ margin:5px 0 0; color:var(--c-text-light,#64748b); font-size:13px; }
+.page-head .ph-actions{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+@media (max-width:640px){ .page-head{ align-items:flex-start; } .page-head h1{ font-size:19px; } .page-head .ph-sub{ font-size:12px; } }
+@media (min-width:981px){ .nav-search-btn{ display:none!important; } }
+.key-stats{ display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); gap:10px; margin:6px 0 14px; }
+.key-stats .ks-item{ background:linear-gradient(180deg,var(--c-bg,#f8fafc),var(--c-card,#fff)); border:1px solid var(--c-border,#e6e9ee); border-radius:12px; padding:10px 12px; }
+.key-stats .ks-v{ font-size:16px; font-weight:700; color:var(--c-text,#0f172a); line-height:1.2; }
+.key-stats .ks-l{ font-size:12px; color:var(--c-text-light,#64748b); margin-top:3px; }
+.key-stats .ks-item.accent{ background:linear-gradient(180deg,rgba(13,148,136,.10),rgba(13,148,136,.02)); border-color:rgba(13,148,136,.35); }
+.key-stats .ks-item.accent .ks-v{ color:var(--c-primary,#0d9488); }
+@media (max-width:640px){ .key-stats{ grid-template-columns:repeat(2,1fr); } }
+/* === /UI-FIX v3.995 === */
 </style>
 </head>
 <body>
@@ -1602,30 +1799,84 @@ body.dark ::selection{ background:rgba(34,211,238,.32); color:#e2e8f0; }
   setTimeout(hideLoader, 6000);
 })();
 </script>
-<div class="top-nav"><h1>冻干</h1><div style="display:flex;align-items:center;gap:8px"><div class="user-bar" id="userBar"><div class="user-info" id="loginEntry" onclick="showLoginModal()"><span style="font-size:14px">👤</span><span style="font-size:13px">登录</span></div></div><button class="nav-btn" onclick="toggleDarkMode()" id="darkBtn" title="切换暗色模式">🌙</button><button class="nav-btn" onclick="window.print()" title="打印">🖨️</button><button class="nav-btn" onclick="checkAppUpdate(false)" title="检查更新">🔄</button><button class="nav-btn" onclick="showDiagnosticModal()" id="diagBtn" title="诊断信息" style="background:linear-gradient(135deg,#ff6b6b,#f06292);color:#fff;font-weight:700">🩺</button><span class="ver" title="长按版本号5秒也能打开诊断面板" id="verBadge">Web v3.9911</span></div></div>
-<div class="tab-bar" id="tabBar">
-  <div class="tab-item active" data-page="curve" onclick="switchPage('curve')"><span class="ti">📈</span>曲线生成</div>
-  <div class="tab-item" data-page="image" onclick="switchPage('image')"><span class="ti">📸</span>图片分析</div>
-  <div class="tab-item" data-page="recipes" onclick="switchPage('recipes')"><span class="ti">🧪</span>配方库</div>
-  <span class="tab-sep"></span>
-  <div class="tab-item" data-page="thermal" onclick="switchPage('thermal')"><span class="ti">🌡</span>热力学</div>
-  <div class="tab-item" data-page="defect" onclick="switchPage('defect')"><span class="ti">⚠️</span>缺陷诊断</div>
-  <div class="tab-item" data-page="compare" onclick="switchPage('compare')"><span class="ti">⚖️</span>配方对比</div>
-  <div class="tab-item" data-page="optimize" onclick="switchPage('optimize')"><span class="ti">🧰</span>快速配方/优化</div>
-  <div class="tab-item" data-page="optparam" onclick="switchPage('optparam')"><span class="ti">🎛</span>工艺优化</div>
-  <span class="tab-sep"></span>
-  <div class="tab-item" data-page="knowledge" onclick="switchPage('knowledge')"><span class="ti">📚</span>冻干知识</div>
-  <div class="tab-item" data-page="course" onclick="switchPage('course')"><span class="ti">🎓</span>操作课程</div>
-  <div class="tab-item" data-page="process" onclick="switchPage('process')"><span class="ti">🎬</span>工艺动画</div>
-  <span class="tab-sep"></span>
-  <div class="tab-item" data-page="data" onclick="switchPage('data')"><span class="ti">📊</span>数据管理</div>
-  <div class="tab-item" data-page="admin" onclick="tryOpenAdmin()" id="adminTab"><span class="ti">👑</span>管理后台<span id="adminLock" style="font-size:10px;margin-left:4px;opacity:.6">🔒</span></div>
-  <input id="pageSearch" class="page-search" placeholder="🔍 搜索页面" oninput="filterTabs(this.value)" aria-label="搜索页面">
+<script>
+/* UI-FIX v3.995：头栏高度实测自适应 + 移动端页面搜索（加性补丁，不改动既有逻辑） */
+(function(){
+  function syncTopNavH(){
+    var n = document.querySelector('.top-nav');
+    if (!n) return;
+    var h = Math.round(n.getBoundingClientRect().height);
+    if (h > 0) document.documentElement.style.setProperty('--topnav-h', h + 'px');
+  }
+  function boot(){
+    syncTopNavH();
+    if (window.ResizeObserver){
+      try { var n = document.querySelector('.top-nav'); if (n) new ResizeObserver(syncTopNavH).observe(n); } catch(e){}
+    }
+    window.addEventListener('load', syncTopNavH);
+    window.addEventListener('resize', syncTopNavH);
+    window.addEventListener('orientationchange', function(){ setTimeout(syncTopNavH, 260); });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+  else boot();
+  window.__syncTopNavH = syncTopNavH;
+})();
+function toggleMobileSearch(){
+  var box = document.getElementById('mobilePageSearch');
+  if (!box) return;
+  var opened = box.classList.toggle('open');
+  var inp = box.querySelector('input');
+  if (opened){ if (inp) inp.focus(); }
+  else { if (inp) inp.value = ''; if (typeof filterTabs === 'function') filterTabs(''); }
+}
+function mobileSearchInput(v){ if (typeof filterTabs === 'function') filterTabs(v); }
+</script>
+<div class="top-nav"><h1>冻干</h1><div style="display:flex;align-items:center;gap:8px"><div class="user-bar" id="userBar"><div class="user-info" id="loginEntry" onclick="showLoginModal()"><span style="font-size:14px">👤</span><span style="font-size:13px">登录</span></div></div><button class="nav-btn nav-search-btn" onclick="toggleMobileSearch()" title="搜索页面" aria-label="搜索页面">🔍</button><button class="nav-btn" onclick="toggleDarkMode()" id="darkBtn" title="切换暗色模式">🌙</button><button class="nav-btn" onclick="window.print()" title="打印">🖨️</button><button class="nav-btn" onclick="checkAppUpdate(false)" title="检查更新">🔄</button><button class="nav-btn" onclick="showDiagnosticModal()" id="diagBtn" title="诊断信息" style="background:linear-gradient(135deg,#ff6b6b,#f06292);color:#fff;font-weight:700">🩺</button><span class="ver" title="长按版本号5秒也能打开诊断面板" id="verBadge">Web v3.996</span></div></div>
+<div class="sb-mobile-search" id="mobilePageSearch">
+  <input class="page-search" placeholder="🔍 搜索页面…" oninput="mobileSearchInput(this.value)" aria-label="搜索页面">
 </div>
+<aside class="tab-bar sidebar" id="tabBar">
+  <div class="sb-brand"><span class="sb-logo">❄️</span><span>冻干工艺优化</span></div>
+  <div class="sb-search"><input id="pageSearch" class="page-search" placeholder="🔍 搜索页面" oninput="filterTabs(this.value)" aria-label="搜索页面"></div>
+  <div class="sb-scroll">
+    <div class="tab-group" data-group="核心工具">
+      <div class="tab-group-title">核心工具</div>
+      <div class="tab-item active" data-page="curve" onclick="switchPage('curve')"><span class="ti">📈</span><span class="tl">曲线生成</span></div>
+      <div class="tab-item" data-page="optimize" onclick="switchPage('optimize')"><span class="ti">🧰</span><span class="tl">快速配方/优化</span></div>
+      <div class="tab-item" data-page="optparam" onclick="switchPage('optparam')"><span class="ti">🎛</span><span class="tl">工艺优化</span></div>
+      <div class="tab-item" data-page="compare" onclick="switchPage('compare')"><span class="ti">⚖️</span><span class="tl">配方对比</span></div>
+      <div class="tab-item" data-page="recipes" onclick="switchPage('recipes')"><span class="ti">🧪</span><span class="tl">配方库</span></div>
+    </div>
+    <div class="tab-group" data-group="分析诊断">
+      <div class="tab-group-title">分析诊断</div>
+      <div class="tab-item" data-page="image" onclick="switchPage('image')"><span class="ti">📸</span><span class="tl">图片分析</span></div>
+      <div class="tab-item" data-page="defect" onclick="switchPage('defect')"><span class="ti">⚠️</span><span class="tl">缺陷诊断</span></div>
+      <div class="tab-item" data-page="thermal" onclick="switchPage('thermal')"><span class="ti">🌡</span><span class="tl">热力学</span></div>
+    </div>
+    <div class="tab-group" data-group="知识培训">
+      <div class="tab-group-title">知识培训</div>
+      <div class="tab-item" data-page="knowledge" onclick="switchPage('knowledge')"><span class="ti">📚</span><span class="tl">冻干知识</span></div>
+      <div class="tab-item" data-page="course" onclick="switchPage('course')"><span class="ti">🎓</span><span class="tl">操作课程</span></div>
+      <div class="tab-item" data-page="process" onclick="switchPage('process')"><span class="ti">🎬</span><span class="tl">工艺动画</span></div>
+    </div>
+    <div class="tab-group" data-group="系统与数据">
+      <div class="tab-group-title">系统与数据</div>
+      <div class="tab-item" data-page="data" onclick="switchPage('data')"><span class="ti">📊</span><span class="tl">数据管理</span></div>
+      <div class="tab-item" data-page="admin" onclick="tryOpenAdmin()" id="adminTab"><span class="ti">👑</span><span class="tl">管理后台</span><span id="adminLock" style="font-size:10px;margin-left:4px;opacity:.6">🔒</span></div>
+    </div>
+  </div>
+</aside>
 <div class="mc">
 
 <!-- CURVE PAGE -->
 <div class="page active" id="page-curve">
+<div class="page-head">
+  <div>
+    <h1>冻干曲线生成</h1>
+    <p class="ph-sub">基于 Pikal 稳态升华 + QbD 物理引擎，推导理论优选工艺曲线</p>
+  </div>
+  <div class="ph-actions"><button class="btn btn-p" onclick="doGenerate()">🚀 一键生成</button></div>
+</div>
 <div class="welcome-banner" id="welcomeBanner" style="display:none">
   <span>👋 欢迎使用冻干！登录后可解锁VIP专属配方与无限历史记录</span>
   <button onclick="closeWelcome()">知道了</button>
@@ -1658,7 +1909,7 @@ body.dark ::selection{ background:rgba(34,211,238,.32); color:#e2e8f0; }
 </div></div>
 <div class="card" id="thermalPanel" style="display:none"><div class="card-title"><span>🌡</span>热力学参数面板</div><div class="thermal-grid" id="thermalGrid"></div><ul class="sug-list" id="thermalSuggestions"></ul></div>
 <div class="card" id="chartCard" style="display:none"><div class="card-title"><span>📈</span>冻干曲线图 <span style="font-size:12px;color:var(--c-text-light);font-weight:400;margin-left:auto">悬停看数值 · 点击曲线任意位置固定读取温度/真空</span><button class="btn btn-s btn-sm" style="margin-left:10px" onclick="if(state&&state.currentCurve){drawCurveCanvas(document.getElementById('curveChart'),state.currentCurve);showToast('Canvas 已重绘');}else showToast('请先生成曲线')">🖼 Canvas 重绘</button></div><div class="canvas-wrap"><canvas id="curveChart" width="840" height="320"></canvas><div id="curveTip" class="curve-tip"></div><div id="curvePinTip" class="curve-tip pin-tip"></div></div></div>
-<div class="card" id="resultsCard" style="display:none"><div class="card-title"><span>⚙️</span>工艺参数</div><div class="disclaimer-banner">⚠️ 本工艺曲线由所选活性物与保护剂的热力学参数（Tg'/Te/Tc/最大耐受温度）推导，为<strong>理论优选范围</strong>。实际批量生产前须经<strong>小试 → 中试</strong>验证（含产品温度探头实测、塌陷/复水性检测），并按设备能力微调。请勿直接照搬用于生产。</div><div class="stage-grid" id="stageGrid"></div><div style="text-align:center;margin:12px 0"><span style="font-size:13px;color:var(--c-text-light)">总周期</span> <span style="font-size:24px;font-weight:700;color:var(--c-primary)" id="totalTime"></span> <span style="font-size:13px;color:var(--c-text-light)">小时</span></div>
+<div class="card" id="resultsCard" style="display:none"><div class="card-title"><span>⚙️</span>工艺参数</div><div class="disclaimer-banner">⚠️ 本工艺曲线由所选活性物与保护剂的热力学参数（Tg'/Te/Tc/最大耐受温度）推导，为<strong>理论优选范围</strong>。实际批量生产前须经<strong>小试 → 中试</strong>验证（含产品温度探头实测、塌陷/复水性检测），并按设备能力微调。请勿直接照搬用于生产。</div><div class="key-stats" id="keyStatsBar"></div><div class="stage-grid" id="stageGrid"></div><div style="text-align:center;margin:12px 0"><span style="font-size:13px;color:var(--c-text-light)">总周期</span> <span style="font-size:24px;font-weight:700;color:var(--c-primary)" id="totalTime"></span> <span style="font-size:13px;color:var(--c-text-light)">小时</span></div>
 <div id="paramInterp" style="margin-top:14px"></div>
 <div class="ui-sec"><div class="ui-sec-title">⚡ 快速微调<span class="sub">一键调整关键参数并即时重算</span></div><div class="qa-grid" id="quickAdjustGrid"></div></div>
 <div class="ui-sec" id="notesArea"></div>
@@ -1739,6 +1990,12 @@ body.dark ::selection{ background:rgba(34,211,238,.32); color:#e2e8f0; }
 
 <!-- DATA PAGE -->
 <div class="page" id="page-data">
+<div class="page-head">
+  <div>
+    <h1>数据管理</h1>
+    <p class="ph-sub">历史批次 · 统计看板 · 云同步 · 备份恢复</p>
+  </div>
+</div>
 <div class="card"><div class="card-title"><span>📊</span>数据统计</div><div class="stats-grid" id="statsGrid"></div><div id="ratioArea" style="display:none"><div style="font-size:13px;margin-bottom:4px">周期分布</div><div class="ratio-bar" id="ratioBar"></div><div style="display:flex;justify-content:space-between;font-size:12px;color:var(--c-text-light)"><span>标准 <span id="rPass">0</span></span><span>较长 <span id="rWarn">0</span></span><span>长周期 <span id="rFail">0</span></span></div><div style="font-size:11px;color:var(--c-text-light);margin-top:4px">注：热敏性高的活性物（生长因子/酶类/视黄醇）常需 30h+ 长周期工艺，>32h 不等于异常。</div></div></div>
 <div class="card"><div class="card-title"><span>📜</span>历史批次记录</div><div id="historyList"><div style="text-align:center;color:var(--c-text-light);padding:20px">暂无历史记录，生成曲线后点击"存入历史"</div></div></div>
 <div class="card"><div class="card-title"><span>📤</span>数据上传</div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-s btn-sm" onclick="document.getElementById('curveUpload').click()">📈 上传冻干曲线(JSON)</button><input type="file" id="curveUpload" accept=".json,.csv" style="display:none" onchange="handleCurveUpload(event)"><button class="btn btn-s btn-sm" onclick="document.getElementById('historyUpload').click()">📋 上传历史记录</button><input type="file" id="historyUpload" accept=".json,.csv" style="display:none" onchange="handleHistoryUpload(event)"><button class="btn btn-s btn-sm" onclick="document.getElementById('recipeUpload').click()">🧪 上传配方</button><input type="file" id="recipeUpload" accept=".json,.csv" style="display:none" onchange="handleRecipeUpload(event)"></div><div id="uploadPreview" style="margin-top:12px"></div></div>
@@ -1788,6 +2045,12 @@ body.dark ::selection{ background:rgba(34,211,238,.32); color:#e2e8f0; }
 
 <!-- KNOWLEDGE PAGE -->
 <div class="page" id="page-knowledge">
+<div class="page-head">
+  <div>
+    <h1>冻干知识库</h1>
+    <p class="ph-sub">510+ 篇工艺知识，覆盖原理 / 塌陷 / 保护剂 / 水分 / 设备</p>
+  </div>
+</div>
 <div class="card"><div class="card-title"><span>📚</span>冻干知识库 <span style="margin-left:auto;font-size:13px;color:var(--c-text-light)" id="kbCount"></span></div>
 <div class="search-box"><input type="text" id="kbSearch" placeholder="搜索关键词：冻干原理、塌陷、保护剂、水分、冻干机..." oninput="filterKnowledge()"></div>
 <div class="cat-filter" id="kbCats"></div>
@@ -1944,6 +2207,12 @@ body.dark ::selection{ background:rgba(34,211,238,.32); color:#e2e8f0; }
 
 <!-- 工艺优化 PAGE -->
 <div class="page" id="page-optparam">
+<div class="page-head">
+  <div>
+    <h1>工艺优化器</h1>
+    <p class="ph-sub">可视化调参 · 参数扫描 · QbD 设计空间，实时物理核算</p>
+  </div>
+</div>
 <div class="card"><div class="card-title"><span>🎛</span>工艺参数优化 <span style="margin-left:auto;font-size:12px;color:var(--c-text-light)">可视化调参 · 参数扫描 · QbD 设计空间 · 实时物理核算</span></div>
 <div class="opt-hint">在「可视化调参面板」拖动滑块实时看物理评分与曲线；用「参数扫描」定位最优区间与安全边界；用「QbD 设计空间」查看可放行工艺窗口。所有结果由 Pikal 稳态升华模型与曲线页同源核算。</div>
 
@@ -2243,7 +2512,7 @@ body.dark ::selection{ background:rgba(34,211,238,.32); color:#e2e8f0; }
 <script>
 
 // ===== 智能驱动更新：应用自更新 / 版本检查 (v3.48) =====
-const APP_VERSION = '3.9911';
+const APP_VERSION = '3.996';
 const APP_BUILD_ID = '20260820-v366-perm-' + (new Date().toISOString().slice(0,10));
 const APP_UPDATE_MANIFEST = './version.json'; // 可改为托管地址（需 CORS 允许跨域读取）
 function verNum(v){ var n = String(v||'').replace(/[^0-9.]/g,'').split('.'); return (parseInt(n[0]||0,10)*100 + parseInt(n[1]||0,10)); }
@@ -7975,8 +8244,26 @@ var vipLevels = {
     limits: { maxHistory: 99999, maxRecipes: 99999, exportEnabled: true, batchExport: true, advancedAnalysis: true, multiAccount: true, apiAccess: true } }
 };
 var vipPrices = { vip: { monthly: 29, yearly: 299 }, enterprise: { monthly: 99, yearly: 999 } };
-var smsCooldown = 0;
-var pendingSms = null; // { phone, code, expire } 当前待校验的短信验证码
+var smsCooldown = 0;   // 兼容旧引用（登录槽剩余冷却秒数）
+var pendingSms = null; // 兼容旧引用（最近一次下发的验证码 { phone, code, expire }）
+// v3.992：登录页与注册页各有独立验证码槽位，避免跨面板互相覆盖导致「验证码已过期」
+var smsCd = { login: 0, reg: 0 };
+var smsSlots = { login: null, reg: null };
+// 一次性消费：验证码校验成功后立即作废，防止同一码被重放（旧实现可无限复用）
+function __consumeSms(mode) { try { if (smsSlots[mode]) { smsSlots[mode] = null; } } catch(e) {} }
+function __clearAllSms() { try { smsCd = { login: 0, reg: 0 }; smsSlots = { login: null, reg: null }; } catch(e) {} }
+// 输入净化：仅保留数字并截断到 max 位，避免中文输入法/粘贴带入空格或字母
+function sanitizeDigits(el, max) {
+  if (!el) return;
+  var v = String(el.value || '').replace(/\D/g, '').slice(0, max || 11);
+  if (el.value !== v) el.value = v;
+}
+function __smsSlotKey(regMode) { return regMode ? 'reg' : 'login'; }
+function __smsSlot(regMode) { return smsSlots[__smsSlotKey(regMode)]; }
+function __clearSmsSlots() {
+  smsSlots.login = null; smsSlots.reg = null; pendingSms = null;
+  smsCd.login = 0; smsCd.reg = 0; smsCooldown = 0;
+}
 
 function __seedInitialRoles() {
   try {
@@ -8085,28 +8372,87 @@ function resetUserPassword(userId) {
   try { renderAdminUsers(); } catch (e) {}
   showToast('已重置【' + (u.nickname || u.phone) + '】密码为默认密码（演示），请提醒其尽快修改', 4000, 'success');
 }
-// 登录限流：同一手机号连续失败锁定 5 分钟，防暴力破解
-var loginLock = {};
-function __loadLoginLock() {
-  try { var r = localStorage.getItem('lyo.loginLock'); loginLock = (r ? JSON.parse(r) : {}) || {}; } catch (e) { loginLock = {}; }
+// 登录限流（v3.992 重写）：连续失败达到阈值才锁定，锁定时长随触发次数递增。
+// ⚠️ 旧实现是「失败 1 次立即锁 5 分钟」，与注释「连续失败」不符，正常输错一次即被锁死，
+// 属严重体验缺陷。本版改为阈值制：连续失败 5 次才锁，锁定 5→15→30 分钟；30 分钟无失败自动清零。
+var LOGIN_FAIL_LIMIT  = 5;               // 连续失败达到该次数后开始锁定
+var LOGIN_FAIL_WINDOW = 30 * 60 * 1000;  // 距上次失败超过该时长，失败计数清零
+var LOGIN_LOCK_STEPS  = [5, 15, 30, 30]; // 第 1/2/3/4+ 次触发锁定时锁的分钟数
+var LOGIN_GUARD_KEY   = 'lyo.loginGuard.v2';
+var loginLock  = {};   // { phone: unlockAtMs }
+var loginFails = {};   // { phone: { n: 连续失败次数, last: 上次失败时间戳 } }
+function __loadLoginGuard() {
+  var ok = false;
+  try {
+    var raw = localStorage.getItem(LOGIN_GUARD_KEY);
+    var j = raw ? JSON.parse(raw) : null;
+    if (j && typeof j === 'object' && j.lock && typeof j.lock === 'object') {
+      loginLock = j.lock;
+      loginFails = (j.fails && typeof j.fails === 'object') ? j.fails : {};
+      ok = true;
+    }
+  } catch (e) { ok = false; }
+  if (ok) return;
+  // 兼容迁移 v1 旧格式（{ phone: unlockAt }）——旧格式无失败计数，按已锁定 1 次处理
+  try {
+    var oldRaw = localStorage.getItem('lyo.loginLock');
+    var oj = oldRaw ? JSON.parse(oldRaw) : null;
+    var migrated = {};
+    if (oj && typeof oj === 'object' && !oj.lock) {
+      Object.keys(oj).forEach(function (k) { if (typeof oj[k] === 'number') migrated[k] = oj[k]; });
+    }
+    loginLock = migrated; loginFails = {};
+    try { localStorage.removeItem('lyo.loginLock'); } catch (e) {}
+    __saveLoginGuard();
+  } catch (e2) { loginLock = {}; loginFails = {}; }
 }
-function __saveLoginLock() { try { localStorage.setItem('lyo.loginLock', JSON.stringify(loginLock)); } catch (e) {} }
+function __saveLoginGuard() {
+  try { localStorage.setItem(LOGIN_GUARD_KEY, JSON.stringify({ lock: loginLock, fails: loginFails })); } catch (e) {}
+}
+function __loadLoginLock()  { __loadLoginGuard(); }   // 兼容旧调用名
+function __saveLoginLock()  { __saveLoginGuard(); }   // 兼容旧调用名
 function __loginLocked(phone) {
-  __loadLoginLock();
+  __loadLoginGuard();
   var t = loginLock[phone];
   if (!t) return 0;
   if (t > Date.now()) return t - Date.now();
-  delete loginLock[phone]; __saveLoginLock();
+  delete loginLock[phone]; __saveLoginGuard();
   return 0;
 }
+// 记录一次登录失败，返回 { locked, remain, left, n }
+//   locked=true  → 已锁定，remain=剩余锁定毫秒；locked=false → left=锁定前还可尝试的次数
 function __recordLoginFail(phone) {
-  __loadLoginLock();
-  loginLock[phone] = Date.now() + 5 * 60 * 1000;
-  __saveLoginLock();
+  __loadLoginGuard();
+  var now = Date.now();
+  var f = loginFails[phone];
+  if (!f || typeof f.n !== 'number' || (now - (f.last || 0)) > LOGIN_FAIL_WINDOW) f = { n: 0, last: now };
+  f.n = (f.n || 0) + 1; f.last = now;
+  loginFails[phone] = f;
+  var res = { locked: false, remain: 0, left: 0, n: f.n };
+  if (f.n >= LOGIN_FAIL_LIMIT) {
+    var over = Math.min(f.n - LOGIN_FAIL_LIMIT, LOGIN_LOCK_STEPS.length - 1);
+    var mins = LOGIN_LOCK_STEPS[over < 0 ? 0 : over];
+    loginLock[phone] = now + mins * 60 * 1000;
+    res.locked = true; res.remain = mins * 60 * 1000;
+  } else {
+    res.left = LOGIN_FAIL_LIMIT - f.n;
+  }
+  __saveLoginGuard();
+  return res;
 }
 function __clearLoginFail(phone) {
-  __loadLoginLock();
-  if (loginLock[phone]) { delete loginLock[phone]; __saveLoginLock(); }
+  __loadLoginGuard();
+  var dirty = false;
+  if (loginLock[phone])  { delete loginLock[phone];  dirty = true; }
+  if (loginFails[phone]) { delete loginFails[phone]; dirty = true; }
+  if (dirty) __saveLoginGuard();
+}
+// 失败后的统一提示文案（区分「还能试几次」与「已锁定多久」）
+function __loginFailHint(res) {
+  if (!res) return '';
+  if (res.locked) return '登录失败次数过多，已临时锁定 ' + Math.round(res.remain / 60000) + ' 分钟';
+  if (res.left > 0) return '还可尝试 ' + res.left + ' 次，超过后将临时锁定';
+  return '';
 }
 // 演示模式：控制万能码 / OAuth 默认密码是否生效（默认开启，生产可关闭）
 function demoModeOn() {
@@ -8704,40 +9050,70 @@ function openPromptModal(title, desc, fields, onConfirm) {
   setTimeout(function(){ try { var first = fContainer.querySelector('input,textarea'); if (first) first.focus(); } catch(e) {} }, 100);
 }
 function sendSmsCode(regMode) {
+  var mode = regMode ? 'reg' : 'login';
   var phoneId = regMode ? 'regPhone' : 'loginPhone';
+  var btnId = regMode ? 'regSmsBtn' : 'smsBtn';
   var phoneEl = document.getElementById(phoneId);
+  // v3.992：先净化输入再校验，避免粘贴/中文输入法带入杂字符
+  if (phoneEl) sanitizeDigits(phoneEl, 11);
   var phone = phoneEl ? phoneEl.value.trim() : '';
-  if (!phone || !/^1[3-9]\d{9}$/.test(phone)) {
+  if (!/^1[3-9]\d{9}$/.test(phone)) {
     showToast('请输入正确的 11 位手机号');
+    if (phoneEl) phoneEl.focus();
     return;
   }
-  if (smsCooldown > 0) return;
+  // v3.992：冷却期内给出明确提示，而非静默 return（旧实现用户以为没点到）
+  if (smsCd[mode] > 0) {
+    showToast('验证码已发送，请 ' + smsCd[mode] + ' 秒后再获取', 3000, 'info');
+    return;
+  }
   var code;
-  if (pendingSms && pendingSms.phone === phone && pendingSms.expire > Date.now()) {
-    code = pendingSms.code;
+  var slot = smsSlots[mode];
+  if (slot && slot.phone === phone && slot.expire > Date.now()) {
+    code = slot.code; // 仍在有效期内，复用同一条，不重新生成（防覆盖）
   } else {
     code = String(Math.floor(100000 + Math.random() * 900000));
-    pendingSms = { phone: phone, code: code, expire: Date.now() + 60 * 1000 };
+    smsSlots[mode] = { phone: phone, code: code, expire: Date.now() + 60 * 1000 };
   }
-  smsCooldown = 60;
-  var btnId = regMode ? 'regSmsBtn' : 'smsBtn';
+  smsCd[mode] = 60;
   var btn = document.getElementById(btnId);
   if (btn) {
     btn.disabled = true;
+    btn.textContent = smsCd[mode] + 's后重发';
     var timer = setInterval(function() {
-      smsCooldown--;
-      if (btn) btn.textContent = smsCooldown + 's后重发';
-      if (smsCooldown <= 0) {
+      smsCd[mode]--;
+      if (btn) btn.textContent = smsCd[mode] + 's后重发';
+      if (smsCd[mode] <= 0) {
         clearInterval(timer);
         if (btn) { btn.disabled = false; btn.textContent = '获取验证码'; }
       }
     }, 1000);
   }
-  showToast('📩 验证码：' + code + '（1 分钟有效）', 6000);
+  showToast('📩 验证码：' + code + '（1 分钟有效，仅限本页面本次使用）', 6000);
 }
-function onPhoneInput() {
+function onPhoneInput(el) {
+  // v3.992：实时净化 + 格式反馈。el 为触发源（部分旧调用无参，则净化两个手机号框并隐藏提示）
+  if (el) sanitizeDigits(el, 11);
+  else {
+    ['loginPhone', 'regPhone'].forEach(function(id){ var e = document.getElementById(id); if (e) sanitizeDigits(e, 11); });
+  }
   var hints = ['smsHint','regSmsHint'];
   hints.forEach(function(id){ var h = document.getElementById(id); if (h) h.style.display = 'none'; });
+  // 实时格式校验反馈：达到 11 位但格式不对，给出即时提示（避免点登录才报错）
+  var targets = el ? [el] : ['loginPhone', 'regPhone'].map(function(id){ return document.getElementById(id); });
+  targets.forEach(function(t){
+    if (!t || !t.value) return;
+    var ok = /^1[3-9]\d{9}$/.test(t.value);
+    if (!ok && t.value.length >= 11) {
+      t.style.borderColor = '#ef4444';
+    } else {
+      t.style.borderColor = '';
+    }
+  });
+}
+// v3.992：验证码框实时净化（仅数字、最多 6 位）
+function onCodeInput(el) {
+  if (el) sanitizeDigits(el, 6);
 }
 function validateCnNickname(name) {
   return /^[\u4e00-\u9fa5]{2,20}$/.test(name || '');
@@ -8804,7 +9180,14 @@ function __afterLoginSuccess(user) {
 }
 // ===== 登录页交互辅助（v3.85）=====
 var __lyoLoginLock = false;
-function clearLoginInline(panel) { try { var b = document.getElementById(panel === 'reg' ? 'regInlineMsg' : 'loginInlineMsg'); if (b) { b.style.display = 'none'; b.textContent = ''; } } catch(e) {} }
+var __loginInlineTimers = {};
+function clearLoginInline(panel) {
+  try {
+    if (__loginInlineTimers[panel]) { clearTimeout(__loginInlineTimers[panel]); __loginInlineTimers[panel] = null; }
+    var b = document.getElementById(panel === 'reg' ? 'regInlineMsg' : 'loginInlineMsg');
+    if (b) { b.style.display = 'none'; b.textContent = ''; }
+  } catch(e) {}
+}
 function loginInline(panel, msg, type) {
   try {
     var b = document.getElementById(panel === 'reg' ? 'regInlineMsg' : 'loginInlineMsg');
@@ -8813,14 +9196,36 @@ function loginInline(panel, msg, type) {
     b.className = 'login-inline-msg' + (type ? ' ' + type : '');
     b.style.display = 'block';
     if (b.scrollIntoView) try { b.scrollIntoView({ block: 'nearest' }); } catch(e){}
+    // v3.992：提示/成功类消息 4.5s 后自动收起，避免长期占位；错误类保留，便于用户照提示修正
+    if (__loginInlineTimers[panel]) clearTimeout(__loginInlineTimers[panel]);
+    if (type !== 'err') {
+      __loginInlineTimers[panel] = setTimeout(function(){ try { b.style.display = 'none'; } catch(e2){} }, 4500);
+    }
   } catch(e) {}
 }
 function loginBtnLoading(btnId, loading, text) {
   try {
     var btn = document.getElementById(btnId);
     if (!btn) return;
-    if (loading) { btn.dataset._t = btn.textContent; btn.disabled = true; btn.textContent = text || '处理中…'; }
-    else { if (window.__lyoLoginLock) return; btn.disabled = false; if (btn.dataset._t) btn.textContent = btn.dataset._t; }
+    if (loading) {
+      // v3.992：只在首次进入 loading 时记录原文，否则反复调用会把"登录中…"记成原文
+      if (!btn.dataset._t) btn.dataset._t = btn.textContent;
+      btn.disabled = true; btn.textContent = text || '处理中…';
+    } else {
+      if (window.__lyoLoginLock) { btn.disabled = true; return; } // 锁定中保持禁用
+      btn.disabled = false;
+      if (btn.dataset._t) btn.textContent = btn.dataset._t;
+    }
+  } catch(e) {}
+}
+// v3.992：把按钮完整恢复到可用态（文字 + disabled）。
+// 旧实现在锁定解除时只置 disabled=false，未还原 textContent，导致按钮永久停在「登录中…」。
+function __restoreLoginBtn(btnId) {
+  try {
+    var btn = document.getElementById(btnId);
+    if (!btn) return;
+    btn.disabled = false;
+    if (btn.dataset._t) btn.textContent = btn.dataset._t;
   } catch(e) {}
 }
 function showLoginLock(remainMs) {
@@ -8836,7 +9241,13 @@ function showLoginLock(remainMs) {
       var left = Math.max(0, end - Date.now());
       var m = Math.floor(left / 60000), s = Math.floor((left % 60000) / 1000);
       box.textContent = '🔒 登录失败次数过多，已临时锁定，请 ' + m + ':' + (s < 10 ? '0' : '') + s + ' 后再试';
-      if (left <= 0) { window.__lyoLoginLock = false; box.style.display = 'none'; if (btn) btn.disabled = false; return; }
+      if (left <= 0) {
+        window.__lyoLoginLock = false;
+        box.style.display = 'none';
+        __restoreLoginBtn('phoneLoginBtn'); // 解锁必须恢复按钮文字
+        loginInline('login', '✅ 锁定已解除，可以重新登录了', 'ok');
+        return;
+      }
       setTimeout(tick, 500);
     }
     tick();
@@ -8863,14 +9274,18 @@ function doPhoneLogin() {
     loginInline('login', '请输入短信验证码或密码', 'err'); showToast('请输入短信验证码或密码'); return;
   }
   if (useCode) {
-    // v3.80：演示模式开启时万能码可用，关闭后仅真实验证码
+    // v3.992：改用 per-mode 槽位 smsSlots.login，避免与注册页验证码互相覆盖
     if (demoModeOn() && code === '888888') {
-      // pass
-    } else if (!pendingSms || pendingSms.phone !== phone || pendingSms.expire <= Date.now()) {
-      loginInline('login', '验证码已过期，请重新获取', 'err'); showToast('验证码已过期，请重新获取'); pendingSms = null; return;
-    } else if (code !== pendingSms.code) {
-      if (user) __recordLoginFail(phone); // v3.80 失败计数（限流）
-      loginInline('login', '验证码错误', 'err'); showToast('验证码错误', 4000, 'error'); return;
+      // pass（演示万能码）
+    } else {
+      var slot = smsSlots.login;
+      if (!slot || slot.phone !== phone || slot.expire <= Date.now()) {
+        loginInline('login', '验证码已过期，请重新获取', 'err'); showToast('验证码已过期，请重新获取'); __consumeSms('login'); return;
+      } else if (code !== slot.code) {
+        if (user) __recordLoginFail(phone); // v3.80 失败计数（限流）
+        loginInline('login', '验证码错误', 'err'); showToast('验证码错误', 4000, 'error'); return;
+      }
+      __consumeSms('login'); // v3.992：校验通过即消费，防止同码重放
     }
   }
   if (usePwd) {
@@ -12444,6 +12859,10 @@ function init() {
       if (_vp.indexOf(_h) !== -1 && typeof switchPage === 'function') { switchPage(_h); }
     }
   } catch(e) {}
+  // 握手键联动：从「冻干工艺工作台」优化器传入推荐工艺（#handoff=1）
+  if (location.hash && location.hash.indexOf('handoff=1') !== -1) {
+    setTimeout(function(){ try{ applyHandoffToCurve(); }catch(e){} }, 400);
+  }
 }
 
 function populateSelects() {
@@ -13912,6 +14331,17 @@ function renderResults(curve) {
     + '<div class="stage-detail" id="sd-sec" onclick="event.stopPropagation()">' + stageDetailHtml(curve, 'sec') + '</div></div>';
   document.getElementById('stageGrid').innerHTML = html;
   document.getElementById('totalTime').textContent = curve.totalTime;
+  var ksEl = document.getElementById('keyStatsBar');
+  if (ksEl) {
+    var ks = [
+      { l: '总周期', v: curve.totalTime + ' h', c: 'accent' },
+      { l: '预冻终温', v: s.preFreeze.finalTemp + ' °C' },
+      { l: '一干搁板', v: s.primary.startTemp + '→' + s.primary.endTemp + ' °C' },
+      { l: '一干真空', v: s.primary.startVacuum + '→' + s.primary.endVacuum + ' mbar' },
+      { l: '二干终温', v: s.secondary.endTemp + ' °C' }
+    ];
+    ksEl.innerHTML = ks.map(function(k){ return '<div class="ks-item' + (k.c ? (' ' + k.c) : '') + '"><div class="ks-v">' + k.v + '</div><div class="ks-l">' + k.l + '</div></div>'; }).join('');
+  }
   renderParamInterp(curve);
 
   // Quick adjust
@@ -31198,5 +31628,78 @@ if ('serviceWorker' in navigator && location.protocol.indexOf('http') === 0) {
 }
 </script>
 
+
+<!-- ===== KB-PATCH-BEGIN ===== -->
+<script>
+/* _kbpatch_00_tags.js */
+/* v3.992 知识库标签体系统一
+   847 个分散标签（67% 为只出现一次的孤岛标签）-> 52 个标准标签
+   每篇保底 3 个，提升检索召回与分类聚合。幂等：重复执行结果一致。 */
+(function () {
+  var STD_KW = [["A1 冻干原理",["原理","基础","脱水","升华区","低温干燥","为什么","机理","机制","物理","相变","闪蒸"]],["A2 相图与工艺窗口",["冻干窗口","工艺窗口","温度窗口","安全裕度","裕度","三相点","相图","饱和蒸汽压","饱和压","饱和蒸气压","蒸气压","窗口","过冷","过冷度","驱动力","升华驱动力","传质驱动","耦合"]],["A3 传热传质",["传热","传质","Kv","传热面积","传质系数","阻力","阻升华","升华界面","干层","湿层","潜热","能量","能量平衡","热平衡","稳态升华","Pikal","物理引擎","质量守恒","失重","热力学","计算","面积"]],["A4 温度特性参数",["共晶","共晶点","共熔点","共晶温度","Te","Tg","Tg′","玻璃态","玻璃化","玻璃化转变","结构稳定","塌陷温度","Tc","无定形","冻结浓缩","冷冻浓缩","最大浓缩","溶质迁移","热稳定性","热冲击","超温","过热","温度"]],["A5 冰晶与成核",["冰晶","成核","受控成核","重结晶","晶型","多晶型","结晶","结晶度","结晶平台","固化","预冻不全","过冷"]],["A6 水分形态与残水",["残水","残水率","残留水分","水分","结合水","自由水","吸附水","水分活度","Aw","aw","水分超标","水解","含水","干燥不全","残冰","包裹水","残"]],["A7 升华动力学",["升华","解吸","解析","干燥时间","速率","一干","一次干燥","干燥速率"]],["A8 曲线与周期",["曲线","曲线解读","周期","周期优化","升温","升温曲线","阶梯","阶梯升温","升板温","保持段","降温","回温","时间轴","阶段","提速","瓶颈","热惯性","校正","平衡","压力程序"]],["B1 预冻",["预冻","降温速率","装载","装载量","装液","固含","固含量","高固含","高浓度","浓度","装量"]],["B2 退火",["退火","热处理","均匀化"]],["B3 一次干燥",["一干","一次干燥","主干燥","供热","加热","电加热","硅油","硅油循环"]],["B4 二次干燥",["二干","二次干燥","解析干燥","解析","解吸","过干","热处理"]],["B5 终点判定",["终点","终点判定","判据","压力升","PRT","Pirani","压差","温度跃变","质损法","假干燥","节流阀","Arrhenius","收紧"]],["B6 压塞与出箱",["压塞","液压","封口","破空","出箱","充氮","进出料","进出","胶塞"]],["B7 工艺设计",["工艺设计","工艺开发","设定","设计","设计空间","QbD","关键参数","参数","优化","CTRL","受控","方案","实操","案例"]],["B8 放大与转移",["放大","scale-up","中试","工艺转移","技术包","衔接","尺度","系统思维","小批量","柔性","产能","产线","批量","批内差异","批间差异","批内一致","批间一致","均匀性","均温","均一","均匀","一致","差异","波动"]],["C1 冻干机结构",["设备","组成","结构","干燥箱","视镜","容器","西林瓶","西林","冻干机","选型","家用","DIY","桌面机","自做","实验室","仪器"]],["C2 制冷与冷阱",["制冷","制冷循环","压缩机","蒸发器","冷凝","冷凝器","冷阱","捕水","捕水量","捕水能力","凝华","结霜","霜","化霜","除霜","返油","泵油"]],["C3 真空系统",["真空泵","罗茨泵","极限真空","mbar","漏气","泄漏","泄漏率","检漏","漏率","真空","真空度","腔压","腔体压强","真空系统"]],["C4 搁板与温控",["搁板","搁板温度","制品温度","产品温度","产品温","温差","控温","温度分布","分布","梯度","温度探头","探针","探头","布置","热电偶","校准"]],["C5 仪表与PAT",["PAT","过程分析","NIR","在线","在线检测","监控","监测","测量","称重","数据","SCADA","预测","建模","仿真"]],["C6 控制系统",["PLC","HMI","控制系统","控制","报警","审计追踪","电子记录","数据完整性","ALCOA","电子化","记录","数字化"]],["C7 设备验证",["验证","DQ","IQ","OQ","PQ","IQ/OQ/PQ","确认","点检","预防性","维护","预演","能力"]],["C8 清洁灭菌",["CIP","SIP","CIP/SIP","灭菌","清洁","清洁验证","交叉污染","污染","生物膜","F0","WFI","水系统","公用工程","LOTO","有限空间","应急预案","应急","安全"]],["D1 无菌保障",["无菌","隔离器","RABS","灌装","CCS","污染控制","内毒素","除菌","除菌过滤","过滤","微生物","微生物限度","限度","超标","洁净","环境","环境监测","EM","采样","取样","抽样"]],["E1 保护剂",["保护剂","冻干保护剂","冻保护剂","冻保护","干保护","低温保护剂","海藻糖","蔗糖","甘露醇","糖","还原糖","水替代","水替代假说","优先排斥","保护剂搭配","配对","组合","协同","膜保护"]],["E2 赋形剂与辅料",["赋形剂","辅料","辅料筛选","骨架剂","骨架","基质","聚合物","胶体","粘度","等渗","渗透压","耐受","刺激","低刺","温和","润湿","表面","表面活性剂","表活","吐温","起泡"]],["E3 缓冲与pH",["pH","缓冲","缓冲盐","等电点","酸碱"]],["E4 配方开发",["配方","处方","复配","配比","DOE","DoE","实验设计","响应面","筛选","匹配","相容性","兼容","相互作用","权衡","评估","试验"]],["E5 活性成分",["活性物","活性","活性降","肽","多肽","蛋白","重组蛋白","单抗","抗体","ADC","偶联药","胶原蛋白","VC","维生素","酶","效价","滴度","免疫原性","活菌","存活率","益生菌","微生态","厌氧","细胞","mRNA","LNP","脂质纳米颗粒","脂质体","包封率","营养","营养保留","提取物","血浆","生物制品","疫苗","质控品","标准品"]],["E6 稳定与降解",["稳定性","稳定","降解","有关物质","有关物","杂质","聚集","氧化","抗氧","VE","褐变","美拉德","变色","色变","褪色","光","热","吸湿","回潮","回吸","吸潮","异味","挥发性","损失","归因","冻融","介质"]],["F1 缺陷诊断",["缺陷","诊断","异常","故障","排查","根因","查因","定位","调查","失败","OOS","偏差","CAPA","QA","评判","检查","要求","评判"]],["F2 塌陷与萎缩",["塌陷","萎缩","中心塌陷","收缩","干缩","回熔","热失控","烧结","能","孔隙率","多孔","空洞"]],["F3 外观缺陷",["外观","干饼","饼形","开裂","裂纹","裂瓶","瓶裂","起皮","结皮","硬皮","结壳","皮","成膜","挂霜","霜花","冰雾","爬壁","湿斑","凝露","瓶底","花斑","色泽","颜色","黄变","色香","碎饼","易碎","脆碎度","蓬松","掉粉","结块","分层","分离","条带","分相","刺穿","载体","强度","补强","机械","固态","色泽"]],["F4 喷瓶与起泡",["喷瓶","暴沸","气泡","泡沫","鼓泡","脱气","溢流"]],["F5 复溶异常",["复溶","复溶慢","复水性","溶解","速溶","浑浊","颗粒","粒度","复水","复溶时间","溶媒"]],["F6 批间与计量",["批间","重量","剂量","含量均匀度","均匀度","RSD","CPK","装量差异","装量","不完整","不完全"]],["G1 检测分析",["测定","检测","HPLC","SEC","DSC","热分析","表征","含量","规格","质量标准","建立","标准","药典","USP","中间控制","IPC","过程","放行","智能放行","RTRT","实时放行","鉴别","辨真","真假","使用端"]],["G2 残水测定",["卡氏","卡尔费休","水分测定","留样","残留"]],["G3 包装密封",["包材","包装","密封","密封性","CCIT","完整性","容器","储存","保存","冷藏","冷链","运输","存放","时效"]],["G4 稳定性研究",["加速","长期","有效期","效期","货架期","保质期","指示物","指示指标","稳定性","试验"]],["G5 质量体系",["质量","GMP","化妆品GMP","QRM","风险","FMEA","RPN","变更","追溯","可追溯","批记录","管理","流程","SOP","操作","审计","供应商","物料","拦截","报废","整批","一致性","规范","文件","清单","备案","许可"]],["G6 验证与确认",["工艺验证","PK","PV","PPQ","CPV","ICH","ICH Q5E","可比性","桥接","确认","CQA"]],["G7 法规注册",["法规","合规","注册","申报","NMPA","FDA","中国","美国","欧盟","出口","监管","附录","附录1","要求","卫生","新原料","进口","跨境","电商","飞行","抽检"]],["G8 宣称与标签",["宣称","功效","标签","成分","标注","广告","红线","不良","反应","儿童","特别","孕妇","透明","溯源"]],["H1 化妆品应用",["化妆品","应用","护肤","精华","面膜","冻干面膜","膜布","安瓶","冻干粉","冻干球","球","球粒","片","唇","眼周","男士","控油","母婴","敏感肌","低敏","晒后","医美","抗老","美白","保湿","HA","祛痘","水杨酸","头皮","旅行","便携","派发","样品","香水","定制","个性化","高端","溶珠","精华球","妆食同源","口服","普通精华","护理","修护","无水","纯净","微冻干","包裹","用法","为何贵","保留","能用","正常","保活","颜色"]],["H2 食品应用",["食品","果蔬","风味","咖啡","冻干咖啡","宠物","宠物食品","海参","汤料","方便食品","花茶","保健品","辅食","市场","新消费","喷雾干燥","热风","对比","DIY"]],["H3 剂型与递送",["剂型","粉针","注射","注射剂","微球","ODT","口崩","口崩片","口腔膜","闪释片","液氮","膜片","微针","透皮","递送","粉末","特殊剂型","中药","热敏","一次性","SUS"]],["H4 前沿技术",["AI","ML","数字孪生","孪生","连续","连续冻干","连续制造","效率","微波","喷雾冷冻","技术","前沿","趋势","热点","行业","增长","前景","组织","人才","成长","节能","能效","能耗","绿色","双碳","可持续","碳","环保","废弃"]],["H5 经济与成本",["经济","经济性","成本","负荷","时限","暴露","测量","流程","高端"]],["H6 术语速查",["术语","词典","速查","基础","深度","深度解析","高频疑问","FAQ","实用","为什么","热点","选取","依据","优势","判读","选择","表现","分级"]]];
+  var EXTRA = {"稳健性":"B8 放大与转移","压强脉冲":"C3 真空系统","反解":"A3 传热传质","FDCS":"C5 仪表与PAT","代表瓶":"B5 终点判定","灯检":"G1 检测分析","边瓶":"B8 放大与转移","局部":"B8 放大与转移","香精":"E2 赋形剂与辅料","微粒":"D1 无菌保障","异物":"G1 检测分析","可见":"G1 检测分析","联动":"C6 控制系统","流体":"C1 冻干机结构","间歇":"H4 前沿技术","色素":"E2 赋形剂与辅料","共溶剂":"E2 赋形剂与辅料","冰点":"A4 温度特性参数","体积":"B1 预冻","脆化":"F3 外观缺陷"};
+  var CAT_EXTRA = {"basics":["A1 冻干原理","A4 温度特性参数","A6 水分形态与残水"],"stages":["B7 工艺设计","A8 曲线与周期","B5 终点判定"],"equipment":["C1 冻干机结构","C7 设备验证","C4 搁板与温控"],"formulation":["E4 配方开发","E1 保护剂","E5 活性成分"],"defects":["F1 缺陷诊断","F3 外观缺陷","F5 复溶异常"],"quality":["G1 检测分析","G5 质量体系","G6 验证与确认"],"applications":["H1 化妆品应用","H3 剂型与递送","E5 活性成分"],"regulations":["G7 法规注册","G5 质量体系","G8 宣称与标签"],"trends":["H4 前沿技术","H5 经济与成本","C1 冻干机结构"],"faq":["H6 术语速查","H1 化妆品应用","G3 包装密封"]};
+  var CAT_FALLBACK = {"basics":["A1 冻干原理"],"stages":["B7 工艺设计"],"equipment":["C1 冻干机结构"],"formulation":["E4 配方开发"],"defects":["F1 缺陷诊断"],"quality":["G1 检测分析"],"applications":["H1 化妆品应用"],"regulations":["G7 法规注册"],"trends":["H4 前沿技术"],"faq":["H6 术语速查"]};
+  var MIN_TAGS = 3;
+
+  var STD_NAMES = {};
+  var flat = [];
+  STD_KW.forEach(function (s) {
+    STD_NAMES[s[0]] = 1;
+    s[1].forEach(function (k) { flat.push([k, s[0]]); });
+  });
+  flat.sort(function (a, b) { return b[0].length - a[0].length; });
+
+  function mapTag(t) {
+    var s = String(t == null ? '' : t).trim();
+    if (!s) return null;
+    if (STD_NAMES[s]) return s;
+    if (EXTRA[s]) return EXTRA[s];
+    var i;
+    for (i = 0; i < flat.length; i++) if (flat[i][0] === s) return flat[i][1];
+    for (i = 0; i < flat.length; i++) if (s.indexOf(flat[i][0]) >= 0 || flat[i][0].indexOf(s) >= 0) return flat[i][1];
+    return null;
+  }
+
+  function tagsFor(a) {
+    var out = [], i, r;
+    var old = a.tags || [];
+    for (i = 0; i < old.length; i++) {
+      r = mapTag(old[i]);
+      if (r && out.indexOf(r) < 0) out.push(r);
+    }
+    var pool = (CAT_EXTRA[a.cat] || []).concat([CAT_FALLBACK[a.cat] || 'H6 术语速查']);
+    for (i = 0; i < pool.length && out.length < MIN_TAGS; i++) {
+      if (out.indexOf(pool[i]) < 0) out.push(pool[i]);
+    }
+    return out;
+  }
+
+  function apply() {
+    if (typeof knowledgeArticles === 'undefined' || !knowledgeArticles) return 0;
+    var n = 0;
+    for (var i = 0; i < knowledgeArticles.length; i++) {
+      var a = knowledgeArticles[i];
+      if (!a || !a.id) continue;
+      a.tags = tagsFor(a);
+      n++;
+    }
+    return n;
+  }
+
+  function boot() {
+    try {
+      var n = apply();
+      if (typeof kbEnsureIndex === 'function') kbEnsureIndex();
+      if (window.console && console.info) console.info('[KB] 标签体系统一完成：' + n + ' 篇');
+    } catch (e) { if (window.console) console.warn('[KB] 标签统一失败', e); }
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+  else boot();
+})();
+</script>
+
+<!-- ===== KB-PATCH-END ===== -->
 </body>
 </html>
